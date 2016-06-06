@@ -29,6 +29,10 @@ app.get("/", function (request, response) {
   response.sendFile(__dirname + '/views/index.html');
 });
 
+app.get('health', function(request, response){
+	response.sendStatus(200);
+});
+
 pCollArr = pDb.then(function(db){
   // console.log('getting cursor');
   return db.listCollections();
