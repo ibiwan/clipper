@@ -3,11 +3,20 @@ $(function() {
       url: 'clippets',
     })
     .then(function(data) {
-      console.log(data);
-      $('#clippets')
-        .html('');
+
+      $('#clippets').html('');
+      var seen = {};
+      
       data.forEach(function(item) {
+      
         console.log(item);
+      
+        var fingerprint = (item.filename || item.content) + item.md5;
+        if(seen[fingerprint]){
+          return;
+        }
+        seen[fingerprint] = true;
+      
         switch(item.type) {
           case 'image/jpeg':
             $('#clippets')
@@ -15,7 +24,7 @@ $(function() {
                 $('<div class="clippet"></div>')
                 .append(
                   $('<img>')
-                  .attr('src', 'imgfile/' + item.id)
+                  .attr('src', 'imgfile/' + item._id)
                   .attr('type', item.type)
                   .attr('alt', item.filename)
                   .attr('height', 100)

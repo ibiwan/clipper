@@ -4,11 +4,12 @@ var mongodb = require('mongodb');
 var app = express();
 var db_uri = 'mongodb://' + process.env.DB_USER + ':' + process.env.DB_PASS + '@' + process.env.DB_HOST + ':' + process.env.DB_PORT + '/' + process.env.DB_NAME;
 var bodyParser = require('body-parser')
+var fs = require('fs');
+var md5 = require('md5');
 var multer = require('multer')
 var upload = multer({
   dest: 'uploads/tmp/'
 })
-var fs = require('fs');
 
 app.use(express.static('public'));
 app.use(bodyParser.json()); // to support JSON-encoded bodies
@@ -18,7 +19,7 @@ app.use(bodyParser.urlencoded({ // to support URL-encoded bodies
 
 function errorer(response){
 	return function(err){
-		console.log('error', err);
+		console.log('error', err, err.stack);
 		response.sendStatus(500, err);
 	}
 }
@@ -51,18 +52,19 @@ app.get('/db', function(request, response) {
   });
 });
 
-
-// could also use the POST body instead of query string: http://expressjs.com/en/api.html#req.body
 app.post("/file-upload", upload.single('file'), function(request, response) {
   console.log('upload requested');
   pCollStuff.then(function(collStuff) {
-      // console.log(request.file);
+    var filename = request.file.destination + request.file.filename;
+
       console.log('post', request.body);
 
-      //fieldname, originalname, encoding, mimetype, destination, filename, path, size
+      var content = fs.readFileSync(filename);
+      var hash = md5(content);
 
       var doc = {
-        'data': fs.readFileSync(request.file.destination + request.file.filename),
+        'data': content,
+        'md5': hash,
         'type': request.file.mimetype,
         'filename': request.file.originalname
       };
@@ -71,40 +73,38 @@ app.post("/file-upload", upload.single('file'), function(request, response) {
         .then(function(resp) { // insert, update, find, drop
           console.log('added', resp.ops[0]._id);
           fs.unlink(request.file.destination + request.file.filename);
-        }).catch(errorer(response));
+        })
+        .catch(function(err){
+          if(err.code === 11000){
+            console.log('handle duplicate');
+          } else {
+            throw err;
+          }
+        })
+        .catch(errorer(response));
     }).catch(errorer(response));
   response.sendStatus(200);
 });
 
 app.get('/clippets', function(request, response) {
   pCollStuff.then(function(collStuff) {
-    var clippets = collStuff.find()
+    var clippets = collStuff.find({}, {data:0})
       .sort({
         _id: -1
       })
       .limit(10);
     clippets.toArray().then(function(arr) {
-        var ret = arr.map(function(item) {
-          return {
-            filename: item.filename,
-            type: item.type,
-            id: item._id,
-          };
-        });
-        response.json(ret);
+        response.json(arr);
       }).catch(errorer(response));
   });
 });
 
 app.get('/imgfile/:id', function(request, response) {
-  // console.log(request.params);
   pCollStuff.then(function(collStuff) {
-    // console.log('finding');
     var cursor = collStuff.findOne({
       _id: mongodb.ObjectId(request.params.id)
     })
     .then(function(doc) {
-      // console.log('found', doc);
       response.set('Content-Type', doc.type);	
 	  response.send(doc.data.buffer);
     }).catch(errorer(response));

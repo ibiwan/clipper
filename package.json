@@ -7,11 +7,12 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.12.4",
-    "mongodb": "^2.0.0",
-    "then-mongo": "*",
-    "body-parser": "*",
-    "multer": "*"
+    "express": "^4.12.4", 
+    "mongodb": "^2.0.0",  
+    "then-mongo": "*",    
+    "body-parser": "*",   
+    "multer": "*",        
+    "md5": "*"
   },
   "engines": {
     "node": "^6.0.0"
