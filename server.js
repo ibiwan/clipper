@@ -2,73 +2,117 @@
 var express = require('express');
 var mongodb = require('mongodb');
 var app = express();
-var db_uri = 'mongodb://'+process.env.DB_USER+':'+process.env.DB_PASS+'@'+process.env.DB_HOST+':'+process.env.DB_PORT+'/'+process.env.DB_NAME;
+var db_uri = 'mongodb://' + process.env.DB_USER + ':' + process.env.DB_PASS + '@' + process.env.DB_HOST + ':' + process.env.DB_PORT + '/' + process.env.DB_NAME;
 var bodyParser = require('body-parser')
-var multer  = require('multer')
-var upload = multer({ dest: 'uploads/' })
+var multer = require('multer')
+var upload = multer({
+  dest: 'uploads/tmp/'
+})
+var fs = require('fs');
 
-// http://expressjs.com/en/starter/static-files.html
 app.use(express.static('public'));
-// app.use(express.json());            // to support JSON-encoded bodies
-// app.use(express.urlencoded());      // to support URL-encoded bodies
-// app.use(express.json());
-// app.use(express.urlencoded());
-// app.use(express.multipart());
-app.use(bodyParser.json());         // to support JSON-encoded bodies
-// app.use(bodyParser.urlencoded());   // to support JSON-encoded bodies
-// app.use(bodyParser.multipart());    // to support JSON-encoded bodies
-app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+app.use(bodyParser.json()); // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({ // to support URL-encoded bodies
   extended: true
-})); 
+}));
+
+function errorer(response){
+	return function(err){
+		console.log('error', err);
+		response.sendStatus(500, err);
+	}
+}
 
 var pDb = mongodb.MongoClient.connect(db_uri);
 
-// http://expressjs.com/en/starter/basic-routing.html
-app.get("/", function (request, response) {
-  // response.send(JSON.stringify({heya:'world'}));
+app.get("/", function(request, response) {
   response.sendFile(__dirname + '/views/index.html');
 });
 
-app.get('health', function(request, response){
-	response.sendStatus(200);
-});
-
-pCollArr = pDb.then(function(db){
-  // console.log('getting cursor');
-  return db.listCollections();
-})
-.then(function(col){
-  // console.log('getting array');
-  return col.toArray();
-});
-
-pCollStuff = pDb.then(function(db){
-  return db.collection('stuff');
-});
-
-app.get('/db', function(request, response){
-  console.log('responding');
-  pCollArr.then(function(arr){
-    response.send(JSON.stringify(arr));
-  });
-});
-
-// could also use the POST body instead of query string: http://expressjs.com/en/api.html#req.body
-app.post("/file-upload", upload.single('avatar'), function (request, response) {
-  pCollStuff.then(function(stuff){
-    console.log(request);
-    var post = request.body;
-    console.log(post);
-    var x = stuff.insert(post).then(function(x){ // insert, update, find, drop
-      console.log('added', x.ops[0]._id);
-    });
-  }).catch(function(err){
-    console.log('err', err);
-  });
+app.get('health', function(request, response) {
   response.sendStatus(200);
 });
 
+pCollArr = pDb.then(function(db) {
+    return db.listCollections();
+  })
+  .then(function(col) {
+    return col.toArray();
+  });
+
+pCollStuff = pDb.then(function(db) {
+  return db.collection('stuff');
+});
+
+app.get('/db', function(request, response) {
+  pCollArr.then(function(arr) {
+    var resp = JSON.stringify(arr);
+    response.send(resp);
+  });
+});
+
+
+// could also use the POST body instead of query string: http://expressjs.com/en/api.html#req.body
+app.post("/file-upload", upload.single('file'), function(request, response) {
+  console.log('upload requested');
+  pCollStuff.then(function(collStuff) {
+      // console.log(request.file);
+      console.log('post', request.body);
+
+      //fieldname, originalname, encoding, mimetype, destination, filename, path, size
+
+      var doc = {
+        'data': fs.readFileSync(request.file.destination + request.file.filename),
+        'type': request.file.mimetype,
+        'filename': request.file.originalname
+      };
+
+      collStuff.insert(doc)
+        .then(function(resp) { // insert, update, find, drop
+          console.log('added', resp.ops[0]._id);
+          fs.unlink(request.file.destination + request.file.filename);
+        }).catch(errorer(response));
+    }).catch(errorer(response));
+  response.sendStatus(200);
+});
+
+app.get('/clippets', function(request, response) {
+  pCollStuff.then(function(collStuff) {
+    var clippets = collStuff.find()
+      .sort({
+        _id: -1
+      })
+      .limit(10);
+    clippets.toArray().then(function(arr) {
+        var ret = arr.map(function(item) {
+          return {
+            filename: item.filename,
+            type: item.type,
+            id: item._id,
+          };
+        });
+        response.json(ret);
+      }).catch(errorer(response));
+  });
+});
+
+app.get('/imgfile/:id', function(request, response) {
+  // console.log(request.params);
+  pCollStuff.then(function(collStuff) {
+    // console.log('finding');
+    var cursor = collStuff.findOne({
+      _id: mongodb.ObjectId(request.params.id)
+    })
+    .then(function(doc) {
+      // console.log('found', doc);
+      response.set('Content-Type', doc.type);	
+	  response.send(doc.data.buffer);
+    }).catch(errorer(response));
+  }).catch(errorer(response));
+});
+
 // listen for requests :)
-listener = app.listen(process.env.PORT, function () {
-  console.log('Your app is listening on port ' + listener.address().port);
+listener = app.listen(3000, function() {
+  console.log('Your app is listening on port ' + listener.address()
+    .port);
 });

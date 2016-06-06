@@ -1,22 +1,29 @@
-// client-side js
-// run by the browser each time your view template is loaded
-
-// protip: you can rename this to use .coffee if you prefer
-
-// by default, you've got jQuery,
-// add other scripts at the bottom of index.html
-
 $(function() {
-  console.log('hello world :o');
-  
-  $('form').submit(function(event) {
-    event.preventDefault();
-    dream = $('input').val();
-    $.post('/dreams?' + $.param({dream: dream}), function() {
-      $('<li></li>').text(dream).appendTo('ul#dreams');
-      $('input').val('');
-      $('input').focus();
+  $.getJSON({
+      url: 'clippets',
+    })
+    .then(function(data) {
+      console.log(data);
+      $('#clippets')
+        .html('');
+      data.forEach(function(item) {
+        console.log(item);
+        switch(item.type) {
+          case 'image/jpeg':
+            $('#clippets')
+              .append(
+                $('<div class="clippet"></div>')
+                .append(
+                  $('<img>')
+                  .attr('src', 'imgfile/' + item.id)
+                  .attr('type', item.type)
+                  .attr('alt', item.filename)
+                  .attr('height', 100)
+                  .attr('width', 100)
+                )
+              );
+            break;
+        }
+      });
     });
-  });
-
 });
