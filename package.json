@@ -1,12 +1,34 @@
 {
-  "name": "openshift-cartridge-nodejs-template",
-  "version": "1.0.1",
-  "description": "Custom Node.js cartridge for OpenShift - sample application",
-  "private": true,
-  "main": "start.js",
+  "name": "clipper",
+  "version": "0.0.1",
+  "description": "Everything at your fingertips!",
+  "main": "server.js",
   "scripts": {
-    "start": "node --use_strict start.js"
+    "start": "node server.js"
   },
-  "author": "Ionut-Cristian Florescu <ionut.florescu@gmail.com>",
-  "license": "ISC"
+  "dependencies": {
+    "express": "^4.12.4",
+    "mongodb": "^2.0.0",
+    "then-mongo": "*",
+    "body-parser": "*",
+    "multer": "*"
+  },
+  "engines": {
+    "node": "^6.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://hyperdev.com/#!/project/clipper"
+  },
+  "keywords": [
+    "node",
+    "hyperdev",
+    "express",
+    "then-mongo",
+    "mongodb",
+    "database",
+    "multer"
+  ],
+  "author": "Jeremy Kent <ibiwan@gmail.com>",
+  "license": "MIT"
 }
