@@ -23,13 +23,22 @@
       </h1>
     </header>
 
-    <main>
-      <form action="/file-upload" class="dropzone">
-        <div class="fallback">
-          <input name="file" type="file" multiple />
+    <main class="container">
+      <div class="row">
+        <form action="/file-upload" class="dropzone">
+          <div class="fallback">
+            <input name="file" type="file" multiple />
+          </div>
+        </form>
+      </div>
+      <div class="row">
+        <div id="clippets-col" class="col-xs-12">
+          <div id="clippets"></div>
         </div>
-      </form>
-      <div id="clippets"></div>
+        <div id="preview-col" class="col-xs-9">
+          <div id="preview"><img id="preview" src='' class='img-responsive'></img></div>
+        </div>
+      </div>
     </main>
 
     <footer>
@@ -43,6 +52,7 @@
             crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sprintf/1.0.3/sprintf.js"></script>
     <script src="/client.js"></script>
 
   </body>
