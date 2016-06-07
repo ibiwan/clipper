@@ -1,27 +1,27 @@
 {
-  "name": "clipper",
-  "version": "0.0.1",
-  "description": "Everything at your fingertips!",
-  "main": "server.js",
-  "scripts": {
+  "name"        : "clipper",
+  "version"     : "0.0.1",
+  "description" : "Everything at your fingertips!",
+  "main"        : "server.js",
+  "scripts"     : {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.12.4", 
-    "mongodb": "^2.0.0",  
-    "then-mongo": "*",    
-    "body-parser": "*",   
-    "multer": "*",        
-    "md5": "*"
+    "express"    : "^4.12.4",
+    "mongodb"    : "^2.0.0",
+    "bluebird"   : "*",
+    "body-parser": "*",
+    "multer"     : "*",
+    "md5"        : "*"
   },
-  "engines": {
+  "engines"     : {
     "node": "^6.0.0"
   },
-  "repository": {
+  "repository"  : {
     "type": "git",
-    "url": "https://hyperdev.com/#!/project/clipper"
+    "url" : "https://hyperdev.com/#!/project/clipper"
   },
-  "keywords": [
+  "keywords"    : [
     "node",
     "hyperdev",
     "express",
@@ -30,6 +30,6 @@
     "database",
     "multer"
   ],
-  "author": "Jeremy Kent <ibiwan@gmail.com>",
-  "license": "MIT"
+  "author"      : "Jeremy Kent <ibiwan@gmail.com>",
+  "license"     : "MIT"
 }
