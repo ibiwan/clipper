@@ -1,24 +1,42 @@
-$(function () {
+var seen = {};
+var clearClips = function(){
+  seen = {};
+  $('#clippets').html('');
+};
+
+function addImageClip(id, type, filename, md5str){
+  var fingerprint = filename + md5str;
+	if(seen[fingerprint]){return;}
+	seen[fingerprint] = true;
+
+	var clip = sprintf(
+		'<div class="clippet"><img src="%s" type="%s" alt="%s" height=%d width=%d></div>',
+		'imgfile/' + id, type, filename, 100, 100);
+	$('#clippets').append($(clip));
+}
+
+function getList(){
   $.getJSON({ url : 'clippets' })
   .then(function ( data ) {
-    $('#clippets').html('');
-    var seen = {};
+		clearClips();
     data.forEach(function ( item ) {
-      console.log(item);
-      var fingerprint = (item.filename || item.content) + item.md5;
-      if ( seen[ fingerprint ] ) { return; }
-      seen[ fingerprint ] = true;
-
       switch ( item.type ) {
         case 'image/jpeg':
-          var clip = sprintf('<div class="clippet"><img src="%s" type="%s" alt="%s" height=%d width=%d></div>',
-            'imgfile/' + item._id, item.type, item.filename, 100, 100);
-          $('#clippets').append($(clip));
+        case 'image/png':
+          addImageClip(item._id, item.type, item.filename, item.md5);
           break;
       }
     });
   });
-});
+}
+
+$(getList);
+
+Dropzone.options.drop = {
+  init: function () {
+    this.on("complete", getList);
+  }
+};
 
 (function(previewState){
   function showPreview(imgUrl, keep = false){

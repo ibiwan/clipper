@@ -16,17 +16,10 @@ app.use(bodyParser.urlencoded({    // to support URL-encoded bodies
   extended: true
 }));
 
-function errorer(response) {
-  return function (err) {
-    console.log('error', err, err.stack);
-    response.sendStatus(500, err);
-  }
-}
-
 var db_uri = 'mongodb://' + process.env.DB_USER + ':' + process.env.DB_PASS + '@' + process.env.DB_HOST + ':' + process.env.DB_PORT + '/' + process.env.DB_NAME;
 var pDb    = mongodb.MongoClient.connect(db_uri, { promiseLibrary: Promise });
 
-app.get("/", function (request, response) {
+app.get("/", function (request, response, next) {
   response.sendFile(__dirname + '/views/index.html');
 });
 
@@ -37,7 +30,7 @@ pCollStuff = pDb.then(function (db) {
 app.post(
   "/file-upload", 
   upload.single('file'), 
-  function (request, response) {
+  function (request, response, next) {
     pCollStuff
     .then(function (collStuff) {
       console.log('post', request.body);
@@ -56,6 +49,7 @@ app.post(
       .then(function (resp) { // insert, update, find, drop
         var id = resp.ops[0]._id;
           console.log('added', id);
+          response.send({id:id, hash:hash});
           return id;
       })
       .catch(function (err) {
@@ -65,19 +59,19 @@ app.post(
           .findOne({ md5: hash, filename: original })
           .then(function (matched) {
             console.log('already had', matched._id);
+            response.send({id:matched._id, hash:matched.hash});
           });
         }
         throw err;
       })
-      .catch(errorer(response))
+      .catch(next)
       .finally(function(){
         fs.unlink(request.file.destination + request.file.filename);
       });
-    }).catch(errorer(response));
-  response.sendStatus(200);
+    }).catch(next);
 });
 
-app.get('/clippets', function (request, response) {
+app.get('/clippets', function (request, response, next) {
   pCollStuff
   .then(function (collStuff) {
     return collStuff
@@ -89,10 +83,10 @@ app.get('/clippets', function (request, response) {
   .then(function (arr) {
     return response.json(arr);
   })
-  .catch(errorer(response));
+  .catch(next);
 });
 
-app.get('/imgfile/:id', function (request, response) {
+app.get('/imgfile/:id', function (request, response, next) {
   pCollStuff
   .then(function (collStuff) {
     var id = mongodb.ObjectId(request.params.id);
@@ -102,7 +96,7 @@ app.get('/imgfile/:id', function (request, response) {
     response.set('Content-Type', doc.type);
     response.send(doc.data.buffer);
   })
-  .catch(errorer(response));
+  .catch(next);
 });
 
 // listen for requests :)
