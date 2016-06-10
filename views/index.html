@@ -24,19 +24,19 @@
     </header>
 
     <main class="container">
-      <div class="row">
+      <div class="row" id="upload">
         <form action="/file-upload" class="dropzone" id="drop">
           <div class="fallback">
             <input name="file" type="file" multiple />
           </div>
         </form>
       </div>
-      <div class="row">
+      <div class="row" id="display">
         <div id="clippets-col" class="col-xs-12">
           <div id="clippets"></div>
         </div>
         <div id="preview-col" class="col-xs-9">
-          <div id="preview"><img id="preview" src='' class='img-responsive'></img></div>
+          <div id="preview"><img id="preview" src='' width='100%'></img></div>
         </div>
       </div>
     </main>

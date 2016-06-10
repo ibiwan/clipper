@@ -33,32 +33,30 @@ app.post(
   function (request, response, next) {
     pCollStuff
     .then(function (collStuff) {
-      console.log('post', request.body);
       var original = request.file.originalname;
       var filename = request.file.destination + request.file.filename;
       var content  = fs.readFileSync(filename);
       var hash     = md5(content);
+      var firstTag = original.toLowerCase().replace(' ', '-');
       var doc      = {
         'data'    : content,
         'md5'     : hash,
         'type'    : request.file.mimetype,
-        'filename': original
+        'filename': original,
+        'tags'    : [firstTag]
       };
 
       collStuff.insert(doc)
       .then(function (resp) { // insert, update, find, drop
         var id = resp.ops[0]._id;
-          console.log('added', id);
           response.send({id:id, hash:hash});
           return id;
       })
       .catch(function (err) {
         if (err.code === 11000) {
-          console.log('handle duplicate');
           return collStuff
           .findOne({ md5: hash, filename: original })
           .then(function (matched) {
-            console.log('already had', matched._id);
             response.send({id:matched._id, hash:matched.hash});
           });
         }
@@ -86,6 +84,26 @@ app.get('/clippets', function (request, response, next) {
   .catch(next);
 });
 
+app.get('/tag/delete/:_id/:tag', function(request, response, next){
+  pCollStuff
+  .then(function(collStuff){
+    var idObj = mongodb.ObjectId(request.params._id);
+    var queryDoc = {_id:idObj};
+    var updateDoc = {'$pullAll': { tags: [ request.params.tag ] } };
+    
+    collStuff
+    .update(queryDoc, updateDoc)
+    .then(function(result){
+      return collStuff.findOne(queryDoc, {data:0});
+    })
+    .then(function(arr){
+      console.log(arr);
+      return response.json(arr);
+    });
+  })
+  .catch(next);
+});
+
 app.get('/imgfile/:id', function (request, response, next) {
   pCollStuff
   .then(function (collStuff) {
@@ -99,9 +117,8 @@ app.get('/imgfile/:id', function (request, response, next) {
   .catch(next);
 });
 
-// listen for requests :)
 listener = app.listen(3000, function () {
   console.log(
     'Your app is listening on port ' 
-    + listener.address().port);
+    + listener.address().port); 
 });
