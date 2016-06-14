@@ -1,32 +1,32 @@
 #display {
-	height: 70vh;
+    height : 70vh;
 }
 
 #preview-col {
-	display: none;
-	height: 100%;
-	overflow-y:scroll;
+    display    : none;
+    height     : 100%;
+    overflow-y : scroll;
 }
 
 #clippets-col {
-	overflow-y:scroll;
-	height: 100%;
+    overflow-y : scroll;
+    height     : 100%;
 }
 
 .delete {
-	color: #999;
+    color : #999;
 }
 
 i:before {
-	vertical-align: middle;
+    vertical-align : middle;
 }
 
 .upload {
-	height: 30vh;
+    height : 30vh;
 }
 
 img {
-    display: block;
-    margin: 0 auto;
-    width: 80%;
+    display : block;
+    margin  : 0 auto;
+    width   : 80%;
 }

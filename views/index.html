@@ -1,57 +1,79 @@
-<!-- This is a static file -->
-<!-- served from your routes in server.js -->
-
-<!-- You might want to try something fancier: -->
-<!-- html/nunjucks docs: http://mozilla.github.io/nunjucks/ -->
-<!-- jade: http://jade-lang.com/ -->
-<!-- haml: http://haml.info/tutorial.html -->
-<!-- hbs(handlebars): http://handlebarsjs.com/expressions.html -->
-
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Here's your Stuff!</title>
-    <meta charset="utf-8">
-    <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.css">
-  </head>
-  <body>
-    <header>
-      <h1>
-        A clippet manager
-      </h1>
-    </header>
+    <head>
+        <title>Here's your Stuff!</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="/style.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.css">
+    </head>
+    <body>
+        <header>
+            <h1>
+                A clippet manager
+            </h1>
+        </header>
 
-    <main class="container">
-      <div class="row" id="upload">
-        <form action="/file-upload" class="dropzone" id="drop">
-          <div class="fallback">
-            <input name="file" type="file" multiple />
+        <main class="container">
+            <div class="row" id="upload">
+                <form action="/file-upload" class="dropzone" id="drop">
+                    <div class="fallback">
+                        <input name="file" type="file" multiple/>
+                    </div>
+                </form>
+            </div>
+            <div class="row" id="display">
+                <div id="clippets-col" class="col-xs-12">
+                    <div id="clippets"></div>
+                </div>
+                <div id="preview-col" class="col-xs-9">
+                    <div id="preview"><img src='' width='100%'></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+        </footer>
+
+        <script id="tag_row" type="x-tmpl-mustache">
+            <div class="tags row btn-toolbar"></div>
+        </script>
+
+        <script id="tag_btn" type="x-tmpl-mustache">
+          <button
+            type="button"
+            class="delete tag btn btn-small btn-default">
+              <span>
+                {{ tag }}&nbsp;
+              </span>
+              <i class="delete glyphicon glyphicon-remove-sign color-grey pull-right">
+              </i>
+          </button>
+        </script>
+
+        <script id="clippet" type="x-tmpl-mustache">
+          <div class="clippet row" data-_id="{{ _id }}">
+            <div class="thumb col-xs-3">
+              <img class="img-responsive"
+                src="imgfile/{{ _id }}"
+                type="{{ type }}"
+                alt="{{ filename }}"
+              >
+            </div>
+            <div class="tagrow col">
+            </div>
           </div>
-        </form>
-      </div>
-      <div class="row" id="display">
-        <div id="clippets-col" class="col-xs-12">
-          <div id="clippets"></div>
-        </div>
-        <div id="preview-col" class="col-xs-9">
-          <div id="preview"><img id="preview" src='' width='100%'></img></div>
-        </div>
-      </div>
-    </main>
+        </script>
 
-    <footer>
-    </footer>
+        <script src="https://code.jquery.com/jquery-2.2.1.min.js"
+                integrity="sha256-gvQgAFzTH6trSrAWoH1iPo9Xc96QxSZ3feW6kem+O00="
+                crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/sprintf/1.0.3/sprintf.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js"></script>
 
-    <script src="https://code.jquery.com/jquery-2.2.1.min.js"
-            integrity="sha256-gvQgAFzTH6trSrAWoH1iPo9Xc96QxSZ3feW6kem+O00="
-            crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sprintf/1.0.3/sprintf.js"></script>
-    
-    <script src="/client.js"></script>
+        <script src="/client.js"></script>
 
-  </body>
+    </body>
 </html>
