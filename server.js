@@ -32,13 +32,12 @@ app.post(
   "/file-upload",
   upload.single('file'),
   function ( request, response, next ) {
-    pCollStuff
-      .then(function ( collStuff ) {
+    pCollStuff.then(function ( collStuff ) {
         var original = request.file.originalname;
         var filename = request.file.destination + request.file.filename;
         var content  = fs.readFileSync(filename);
         var hash     = md5(content);
-        var firstTag = original.toLowerCase().replace(' ', '-');
+        var firstTag = original.toLowerCase().replace(/ /g, '-');
         var doc      = {
           'data' : content,
           'md5' : hash,
@@ -72,27 +71,20 @@ app.post(
   });
 
 app.get('/clippets', function ( request, response, next ) {
-  pCollStuff
-    .then(function ( collStuff ) {
+  pCollStuff.then(function ( collStuff ) {
       return collStuff
         .find({}, { data : 0 })
         .sort({ _id : -1 })
-        .limit(10)
+        // .limit(10)
         .toArray();
     })
     .then(function ( arr ) {
       return response.json(arr);
-    })
-    .catch(next);
+    }).catch(next);
 });
 
-app.get('/tag/delete/:_id/:tag', function ( request, response, next ) {
-  pCollStuff
-    .then(function ( collStuff ) {
-      var idObj     = mongodb.ObjectId(request.params._id);
-      var queryDoc  = { _id : idObj };
-      var updateDoc = { '$pullAll' : { tags : [ request.params.tag ] } };
-
+function updateStuff(request, response, next, queryDoc, updateDoc){
+  pCollStuff.then(function(collStuff){
       collStuff
         .update(queryDoc, updateDoc)
         .then(function () {
@@ -104,9 +96,22 @@ app.get('/tag/delete/:_id/:tag', function ( request, response, next ) {
           console.log(arr);
           return response.json(arr[ 0 ]);
         });
-    })
-    .catch(next);
+  }).catch(next);
+}
+
+app.get('/tag/delete/:_id/:tag', function ( request, response, next ) {
+  var idObj     = mongodb.ObjectId(request.params._id);
+  var queryDoc  = { _id : idObj };
+  var updateDoc = { '$pullAll' : { tags : [ request.params.tag ] } };
+  return updateStuff(request, response, next, queryDoc, updateDoc);
 });
+
+app.get('/tag/add/:_id/:tag', function(request, response, next){
+  var idObj     = mongodb.ObjectId(request.params._id);
+  var queryDoc  = { _id : idObj };
+  var updateDoc = { '$addToSet' : { tags : request.params.tag } };
+  return updateStuff(request, response, next, queryDoc, updateDoc);
+})
 
 app.get('/imgfile/:id', function ( request, response, next ) {
   pCollStuff

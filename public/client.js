@@ -5,32 +5,40 @@ var templates = {};
   Mustache.parse(template);
 });
 
-var seen       = {};
+var clipSeen       = {};
 var clearClips = function () {
-  seen = {};
+  clipSeen = {};
   $('#clippets').html('');
 };
 
 function addImageClip( _id, type, filename, md5str, tags ) {
   var fingerprint = filename + md5str;
 
-  if ( seen[ fingerprint ] ) {
-    $(seen[ fingerprint ]).remove();
+  if ( clipSeen[ fingerprint ] ) {
+    $(clipSeen[ fingerprint ]).remove();
   }
 
-  var tagset = $(Mustache.render(templates.tag_row));
-  for ( var i in tags ) {
-    tagset.append(Mustache.render(templates.tag_btn, { tag : tags[ i ] }));
-  }
+  var tagRow = $(Mustache.render(templates.tag_row));
+  var tagSet = tagRow.find('.tags');
+  var tagSeen = {};
+  tags.forEach(function(tag){
+    if(tagSeen[tag]){
+      return;
+    }
+    tagSeen[tag]=true;
+    tagSet.prepend(Mustache.render(templates.tag_btn, { tag:tag }));
+  });
 
   var clippet         = Mustache.render(templates.clippet, {
     _id : _id, type : type, filename : filename
   });
   clippet             = $(clippet);
-  seen[ fingerprint ] = clippet;
-  clippet.find('.tagrow').append(tagset);
+  clipSeen[ fingerprint ] = clippet;
+  clippet.find('.tagRowHolder').append(tagRow);
 
-  $('#clippets').append(clippet);
+  $('#clippets').prepend(clippet); // adds to DOM, so now we can place cursor
+
+  clippet.find('.newTag').focus();
 }
 
 function addClip( item ) {
@@ -40,9 +48,10 @@ function addClip( item ) {
       addImageClip(item._id, item.type, item.filename, item.md5, item.tags);
       break;
     default:
-      throw "couldn't handle type: " + item.type;
+      console.log("couldn't handle type: " + item.type);
       break;
   }
+  updateConfig();
 }
 
 function deleteTag( _id, tag ) {
@@ -52,19 +61,31 @@ function deleteTag( _id, tag ) {
    });
 }
 
-function getList() {
-  $.getJSON({ url : 'clippets' })
+function addTag( _id, tag ) {
+  $.getJSON({ url : 'tag/add/' + _id + '/' + tag })
    .then(function ( data ) {
-     clearClips();
-     data.forEach(addClip);
+     addClip(data);
    });
 }
 
-$(getList);
+function updateConfig(){
+  $('#search').toggle($('#searchEnabled').is(':checked'));
+  $('#upload').toggle($('#uploadEnabled').is(':checked'));
+  $('.delete').toggle($('#deleteEnabled').is(':checked'));
+}
+
+function getList() {
+  $.getJSON({ url:'clippets' })
+   .then(function ( data ) {
+    console.log(data);
+     clearClips();
+     data.slice(0, 3).forEach(addClip);
+   });
+}
 
 Dropzone.options.drop = {
   init : function () {
-    this.on("complete", getList);
+    this.on("complete", function(){getList();});
   }
 };
 
@@ -75,7 +96,7 @@ Dropzone.options.drop = {
       $('#clippets-col').removeClass('col-xs-12').addClass('col-xs-3');
       $('.thumb').removeClass('col-xs-3').addClass('col-xs-12');
       $('#preview-col').show().find('img').attr('src', imgUrl);
-      $('.tags').hide();
+      $('.tagRow').hide();
     }
   }
 
@@ -85,11 +106,11 @@ Dropzone.options.drop = {
       $('#clippets-col').removeClass('col-xs-3').addClass('col-xs-12');
       $('.thumb').removeClass('col-xs-12').addClass('col-xs-3');
       $('#preview-col').hide();
-      $('.tags').show();
+      $('.tagRow').show();
     }
   }
 
-  $('#clippets').on('mouseenter', '.thumb img', function ( event ) {
+  $('#clippets').on('mouclipSeenter', '.thumb img', function ( event ) {
     showPreview($(this).attr('src'), false);
   }).on('mouseleave', 'img', function ( event ) {
     hidePreview(false);
@@ -102,8 +123,30 @@ Dropzone.options.drop = {
   });
 })('off');
 
+$(function(){
+  updateConfig();
+  getList();
+});
+
 $(document).on('click', '.delete', function () {
   var tag = $.trim($(this).closest('.tag').find('span').text());
   var _id = $(this).closest('.clippet').data('_id');
   deleteTag(_id, tag);
+});
+$(document).on('change', '.newTag', function () {
+  var tag = $(this).val();
+  var _id = $(this).closest('.clippet').data('_id');
+  addTag(_id, tag);
+});
+$(document).on('submit', '.newTagForm', function(e){
+  e.preventDefault();
+});
+$(document).on('change', '#searchEnabled', function(){
+  $('#search').toggle(this.checked);
+});
+$(document).on('change', '#uploadEnabled', function(){
+  $('#upload').toggle(this.checked);
+});
+$(document).on('change', '#deleteEnabled', function(){
+  $('.delete').toggle(this.checked);
 });

@@ -9,13 +9,37 @@
     </head>
     <body>
         <header>
-            <h1>
+            <h1 class="text-center">
                 A clippet manager
             </h1>
         </header>
 
         <main class="container">
-            <div class="row" id="upload">
+            <div class="row" id="controlForm">
+                <form>
+                    Enable... 
+                    <label class="checkbox-inline">
+                        <input id="searchEnabled" type="checkbox" aria-label="..." value="" checked>
+                        Search
+                    </label>
+                    <label class="checkbox-inline">
+                        <input id="uploadEnabled" type="checkbox" aria-label="..." value="">
+                        Upload
+                    </label>
+                    <label class="checkbox-inline">
+                        <input id="deleteEnabled" type="checkbox" aria-label="..." value="">
+                        Delete
+                    </label>
+                </form>
+            </div>
+            <div class="row" id="search">
+                <form>
+                    <div class="col-xs-12">
+                        <input name="search" type="text" class="form-control input-lg text-center" placeholder="FILTER TAGS"/>
+                    </div>
+                </form>
+            </div>
+              <div class="row" id="upload">
                 <form action="/file-upload" class="dropzone" id="drop">
                     <div class="fallback">
                         <input name="file" type="file" multiple/>
@@ -36,31 +60,41 @@
         </footer>
 
         <script id="tag_row" type="x-tmpl-mustache">
-            <div class="tags row btn-toolbar"></div>
-        </script>
+            <div class="tagRow row btn-toolbar">
+                <form class="form-inline">
+                <div class="tags">
+                    <span>
+                        <input type="text" class="form-control newTag" placeholder="add tag">
+                    </span>
+                </form>
+                </div>
+            </div>  
+       </script>
 
         <script id="tag_btn" type="x-tmpl-mustache">
+        <span>
           <button
             type="button"
-            class="delete tag btn btn-small btn-default">
+            class="tag btn btn-small btn-default">
               <span>
                 {{ tag }}&nbsp;
               </span>
               <i class="delete glyphicon glyphicon-remove-sign color-grey pull-right">
               </i>
           </button>
+          </span>
         </script>
 
         <script id="clippet" type="x-tmpl-mustache">
           <div class="clippet row" data-_id="{{ _id }}">
-            <div class="thumb col-xs-3">
+            <div class="thumb well col-xs-3">
               <img class="img-responsive"
                 src="imgfile/{{ _id }}"
                 type="{{ type }}"
                 alt="{{ filename }}"
               >
             </div>
-            <div class="tagrow col">
+            <div class="tagRowHolder col-xs-9">
             </div>
           </div>
         </script>
