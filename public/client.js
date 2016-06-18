@@ -1,8 +1,5 @@
-var previewState = 'off';
 var clipSeen     = {};
-var clipList     = [];
-var tagHisto     = {};
-var tagFreq      = [];
+var previewState = 'off';
 
 String.prototype.saneSplit = function(delim) {
   if(this.length === 0){
@@ -24,17 +21,17 @@ var templates = {};
 
 var clearClips = function () {
   clipSeen = {};
-  tagHisto = {};
   $('#clippets').html('');
 };
 
 function makeTagRow(tags){
   var tagRow = $(Mustache.render(templates.tag_row));
+
   var tagSet = tagRow.find('.tags');
   tags.sort().reverse().forEach(function(tag){
-    tagHisto[tag] = tagHisto[tag] + 1 || 1;
     tagSet.prepend(Mustache.render(templates.tag_btn, { tag:tag }));
   });
+
   return tagRow;
 }
 
@@ -46,10 +43,8 @@ function addImageClip( _id, type, filename, md5str, tags ) {
 
   var clippet = $(Mustache.render(templates.clippet, { _id:_id, type:type, filename:filename }));
 
-  clipSeen[ fingerprint ] = {tags:tags,clippet:clippet};
-  clippet.find('.tagRowHolder').append(makeTagRow(tags));
-
-  clippet.hide();
+  clipSeen[ fingerprint ] = {tags:tags, clippet:clippet};
+  clippet.find('.tagRowHolder').append(makeTagRow(tags)).hide();
 
   $('#clippets').prepend(clippet); // adds to DOM, so now we can place cursor
   clippet.find('.newTag').focus();
@@ -76,16 +71,18 @@ function addClip( item ) {
 
 function deleteTag( _id, tag ) {
   $.getJSON({ url : 'tag/delete/' + _id + '/' + tag })
-   .then(function ( data ) {
-     addClip(data);
-   });
+    .then(function ( data ) {
+      addClip(data);
+      // showTagSet();
+  });
 }
 
 function addTag( _id, tag ) {
   $.getJSON({ url : 'tag/add/' + _id + '/' + tag })
-   .then(function ( data ) {
-     addClip(data);
-   });
+    .then(function ( data ) {
+      addClip(data);
+      // showTagSet();
+  });
 }
 
 function updateConfig(fast){
@@ -110,25 +107,31 @@ function showClips(clips){
 }
 
 function showTagSet(){
-  var tagListCol = $('#tag-list-col');
-  tagListCol.html('');
+  tagHisto = {};
+  $.each(clipSeen, function(fingerprint, ct){
+    $.each(ct.tags, function(i, tag){
+      tagHisto[tag] = tagHisto[tag] + 1 || 1;
+    });
+  });
+
   tagFreq = [];
   $.each(tagHisto, function(tag, freq){
-    tagFreq.push({tag:tag, freq:freq});
+    if(freq > 0){
+      tagFreq.push({tag:tag, freq:freq});
+    }
   });
-  tagFreq.sort(function(a, b){return b.freq - a.freq;})
+  tagFreq.sort((a, b) => b.freq - a.freq);
+
+  var tagListCol = $('#tag-list-col').html('');
   $.each(tagFreq, function(i, tf){
-    var btn = Mustache.render(templates.tag_btn_simple, { tag:tf.tag });
-    $(btn).find('i').remove();
-    tagListCol.append(btn);
+    tagListCol.append(Mustache.render(templates.tag_btn_simple, { tag:tf.tag }));
   });
 }
 
 function getList() {
   $.getJSON({ url:'clippets' })
    .then(function(data){
-      clipList = data;
-      showClips(clipList);
+      showClips(data);
       showTagSet();
    });
 }
