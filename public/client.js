@@ -1,57 +1,77 @@
+var previewState = 'off';
+var clipSeen     = {};
+var clipList     = [];
+var tagHisto     = {};
+var tagFreq      = [];
+
+String.prototype.saneSplit = function(delim) {
+  if(this.length === 0){
+    return [];
+  }
+  return this.split(delim);
+};
+
+$.prototype.switchClass = function(remove, add){
+  return $(this).removeClass(remove).addClass(add);
+}
+
 var templates = {};
-[ 'tag_row', 'tag_btn', 'clippet' ].forEach(function ( t ) {
+[ 'tag_row', 'tag_btn', 'tag_btn_simple', 'clippet' ].forEach(function ( t ) {
   var template   = $('#' + t).html();
   templates[ t ] = template;
   Mustache.parse(template);
 });
 
-var clipSeen       = {};
 var clearClips = function () {
   clipSeen = {};
+  tagHisto = {};
   $('#clippets').html('');
 };
 
-function addImageClip( _id, type, filename, md5str, tags ) {
-  var fingerprint = filename + md5str;
-
-  if ( clipSeen[ fingerprint ] ) {
-    $(clipSeen[ fingerprint ]).remove();
-  }
-
+function makeTagRow(tags){
   var tagRow = $(Mustache.render(templates.tag_row));
   var tagSet = tagRow.find('.tags');
-  var tagSeen = {};
-  tags.forEach(function(tag){
-    if(tagSeen[tag]){
-      return;
-    }
-    tagSeen[tag]=true;
+  tags.sort().reverse().forEach(function(tag){
+    tagHisto[tag] = tagHisto[tag] + 1 || 1;
     tagSet.prepend(Mustache.render(templates.tag_btn, { tag:tag }));
   });
+  return tagRow;
+}
 
-  var clippet         = Mustache.render(templates.clippet, {
-    _id : _id, type : type, filename : filename
-  });
-  clippet             = $(clippet);
-  clipSeen[ fingerprint ] = clippet;
-  clippet.find('.tagRowHolder').append(tagRow);
+function addImageClip( _id, type, filename, md5str, tags ) {
+  var fingerprint = filename + md5str;
+  if ( clipSeen[ fingerprint ] ) {
+    clipSeen[ fingerprint ].clippet.remove();
+  }
+
+  var clippet = $(Mustache.render(templates.clippet, { _id:_id, type:type, filename:filename }));
+
+  clipSeen[ fingerprint ] = {tags:tags,clippet:clippet};
+  clippet.find('.tagRowHolder').append(makeTagRow(tags));
+
+  clippet.hide();
 
   $('#clippets').prepend(clippet); // adds to DOM, so now we can place cursor
-
   clippet.find('.newTag').focus();
+
+  return clippet;
 }
 
 function addClip( item ) {
+  var clip;
   switch ( item.type ) {
     case 'image/jpeg':
     case 'image/png':
-      addImageClip(item._id, item.type, item.filename, item.md5, item.tags);
+      clip = addImageClip(item._id, item.type, item.filename, item.md5, item.tags);
       break;
     default:
       console.log("couldn't handle type: " + item.type);
       break;
   }
-  updateConfig();
+  if(clip){
+    updateConfig(true);
+    updateFilter();
+  }
 }
 
 function deleteTag( _id, tag ) {
@@ -68,19 +88,161 @@ function addTag( _id, tag ) {
    });
 }
 
-function updateConfig(){
-  $('#search').toggle($('#searchEnabled').is(':checked'));
-  $('#upload').toggle($('#uploadEnabled').is(':checked'));
-  $('.delete').toggle($('#deleteEnabled').is(':checked'));
+function updateConfig(fast){
+  $.each({
+    '#search'     : '#searchEnabled', 
+    '#upload'     : '#uploadEnabled', 
+    '.newTagSpan' : '#uploadEnabled', 
+    '.delete'     : '#deleteEnabled'
+  }, function(widget, enabler){
+    if(fast){
+      $(widget).toggle($(enabler).hasClass('active'));
+      return;
+    }
+    $(enabler).hasClass('active') ? $(widget).slideDown() : $(widget).slideUp();
+  });
+}
+
+function showClips(clips){
+   clearClips();
+   clips.forEach(addClip);
+   updateFilter();
+}
+
+function showTagSet(){
+  var tagListCol = $('#tag-list-col');
+  tagListCol.html('');
+  tagFreq = [];
+  $.each(tagHisto, function(tag, freq){
+    tagFreq.push({tag:tag, freq:freq});
+  });
+  tagFreq.sort(function(a, b){return b.freq - a.freq;})
+  $.each(tagFreq, function(i, tf){
+    var btn = Mustache.render(templates.tag_btn_simple, { tag:tf.tag });
+    $(btn).find('i').remove();
+    tagListCol.append(btn);
+  });
 }
 
 function getList() {
   $.getJSON({ url:'clippets' })
-   .then(function ( data ) {
-    console.log(data);
-     clearClips();
-     data.slice(0, 3).forEach(addClip);
+   .then(function(data){
+      clipList = data;
+      showClips(clipList);
+      showTagSet();
    });
+}
+
+function unHide(clippet){
+  var img = clippet.find('img');
+  img.attr('src', img.data('src'));
+  clippet.show();
+}
+
+function clearSearchField(){
+  console.log('clearing');
+  $('#searchField').val('');
+  updateFilter();
+}
+
+function updateFilter(){
+  var searchString = $('#searchField').val();
+
+  $('#searchClear').toggle(searchString !== '');
+
+  var searchTerms = $.trim(searchString).saneSplit(' ');
+
+  $('.clippet').hide();
+
+  var nShown = 0;
+  for(var fingerprint in clipSeen){
+    if(nShown >= 5) {
+      continue;
+    }
+
+    var tags    = clipSeen[fingerprint].tags;
+    var clippet = clipSeen[fingerprint].clippet;
+
+    if(searchTerms.length === 0){
+      unHide(clippet);
+      nShown++;
+      continue;
+    }
+
+    var allTermsMatched = true;
+    for(var j in searchTerms){
+      var term = searchTerms[j];
+
+      var anyTagMatched = false;
+      for(var k in tags){
+        var tag = tags[k];
+
+        if(tag.match(term)){
+          anyTagMatched = true; 
+          break;
+        }
+      }
+
+      if(!anyTagMatched){
+        allTermsMatched = false;
+        break;
+      }
+    }
+
+    if(allTermsMatched){
+      unHide(clippet);
+      nShown++;
+    }
+  }
+}
+
+function showPreview( imgUrl, keep ) {
+  if ( previewState === 'off' || keep ) {
+    previewState = keep ? 'keep' : 'moment';
+    $('#clippets-col').switchClass('col-xs-10 col-md-9', 'col-xs-3 col-md-2');
+    $('.thumb').switchClass('col-xs-3 col-md-2', 'col-xs-10 col-md-9');
+    $('#preview-col').show().find('img').attr('src', imgUrl);
+    $('.metadata').hide();
+    $('#tag-list-col').hide();
+  }
+}
+
+function hidePreview( force ) {
+  if ( previewState === 'moment' || (previewState === 'keep' && force) ) {
+    previewState = 'off';
+    $('#clippets-col').switchClass('col-xs-3 col-md-2', 'col-xs-10 col-md-9');
+    $('.thumb').switchClass('col-xs-10 col-md-9', 'col-xs-3 col-md-2');
+    $('#preview-col').hide();
+    $('.metadata').show();
+    $('#tag-list-col').show();
+  }
+}
+
+function deleteTagButtonPressed(e, deleteButton){
+  var tag = $.trim($(deleteButton).closest('.tag').find('span').text());
+  var _id = $(deleteButton).closest('.clippet').data('_id');
+  deleteTag(_id, tag);
+  e.stopPropagation();
+}
+
+function newTagInputChanged(input){
+  var tag = $(input).val();
+  var _id = $(input).closest('.clippet').data('_id');
+  addTag(_id, tag);
+}
+
+function selectMode(modeButton){
+  $('.modeButton').removeClass('active');
+  $(modeButton).addClass('active');
+  updateConfig();
+}
+
+function addTermToSearch(tagDiv){
+  var tag = $.trim($(tagDiv).find('span').text());
+  var field = $('#searchField');
+  field.val(tag + ' ' + field.val());
+  field.focus();
+  updateFilter();
 }
 
 Dropzone.options.drop = {
@@ -89,64 +251,20 @@ Dropzone.options.drop = {
   }
 };
 
-(function ( previewState ) {
-  function showPreview( imgUrl, keep ) {
-    if ( previewState === 'off' || keep ) {
-      previewState = keep ? 'keep' : 'moment';
-      $('#clippets-col').removeClass('col-xs-12').addClass('col-xs-3');
-      $('.thumb').removeClass('col-xs-3').addClass('col-xs-12');
-      $('#preview-col').show().find('img').attr('src', imgUrl);
-      $('.tagRow').hide();
-    }
-  }
-
-  function hidePreview( force ) {
-    if ( previewState === 'moment' || (previewState === 'keep' && force) ) {
-      previewState = 'off';
-      $('#clippets-col').removeClass('col-xs-3').addClass('col-xs-12');
-      $('.thumb').removeClass('col-xs-12').addClass('col-xs-3');
-      $('#preview-col').hide();
-      $('.tagRow').show();
-    }
-  }
-
-  $('#clippets').on('mouclipSeenter', '.thumb img', function ( event ) {
-    showPreview($(this).attr('src'), false);
-  }).on('mouseleave', 'img', function ( event ) {
-    hidePreview(false);
-  }).on('click', 'img', function ( event ) {
-    showPreview($(this).attr('src'), true);
-  });
-
-  $('#preview').on('click', 'img', function ( event ) {
-    hidePreview(true);
-  });
-})('off');
+$(document)   .on('click',      '.delete',      function (e) { deleteTagButtonPressed(e, this);         });
+$(document)   .on('change',     '.newTag',      function (e) { newTagInputChanged(this);                });
+$(document)   .on('submit',     '.newTagForm',  function (e) { e.preventDefault();                      });
+$(document)   .on('submit',     '#searchForm',  function (e) { e.preventDefault();                      });
+$(document)   .on('click',      '.modeButton',  function (e) { selectMode(this);                        });
+$(document)   .on('click',      '.tag',         function (e) { addTermToSearch(this);                   });
+$(document)   .on('keyup',      '#searchField', function (e) { updateFilter()                           });
+$(document)   .on('click',      '#searchClear', function (e) { clearSearchField()                       });
+$('#preview') .on('click',      'img',          function (e) { hidePreview(true);                       });
+$('#clippets').on('mouseleave', 'img',          function (e) { hidePreview(false);                      });
+$('#clippets').on('click',      'img',          function (e) { showPreview($(this).attr('src'), true);  });
+$('#clippets').on('mouseenter', '.thumb img',   function (e) { showPreview($(this).attr('src'), false); });
 
 $(function(){
-  updateConfig();
+  updateConfig(true);
   getList();
-});
-
-$(document).on('click', '.delete', function () {
-  var tag = $.trim($(this).closest('.tag').find('span').text());
-  var _id = $(this).closest('.clippet').data('_id');
-  deleteTag(_id, tag);
-});
-$(document).on('change', '.newTag', function () {
-  var tag = $(this).val();
-  var _id = $(this).closest('.clippet').data('_id');
-  addTag(_id, tag);
-});
-$(document).on('submit', '.newTagForm', function(e){
-  e.preventDefault();
-});
-$(document).on('change', '#searchEnabled', function(){
-  $('#search').toggle(this.checked);
-});
-$(document).on('change', '#uploadEnabled', function(){
-  $('#upload').toggle(this.checked);
-});
-$(document).on('change', '#deleteEnabled', function(){
-  $('.delete').toggle(this.checked);
 });

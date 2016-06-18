@@ -74,8 +74,7 @@ app.get('/clippets', function ( request, response, next ) {
   pCollStuff.then(function ( collStuff ) {
       return collStuff
         .find({}, { data : 0 })
-        .sort({ _id : -1 })
-        // .limit(10)
+        .sort({ lastUpdated:-1, _id:-1 })
         .toArray();
     })
     .then(function ( arr ) {
@@ -84,16 +83,18 @@ app.get('/clippets', function ( request, response, next ) {
 });
 
 function updateStuff(request, response, next, queryDoc, updateDoc){
+  updateDoc['$set'] = {
+    lastUpdated: Date.now()
+  };
   pCollStuff.then(function(collStuff){
       collStuff
-        .update(queryDoc, updateDoc)
+        .updateMany(queryDoc, updateDoc)
         .then(function () {
           return collStuff
             .find(queryDoc, { data : 0 })
             .toArray();
         })
         .then(function ( arr ) {
-          console.log(arr);
           return response.json(arr[ 0 ]);
         });
   }).catch(next);
@@ -113,14 +114,15 @@ app.get('/tag/add/:_id/:tag', function(request, response, next){
   return updateStuff(request, response, next, queryDoc, updateDoc);
 })
 
-app.get('/imgfile/:id', function ( request, response, next ) {
+app.get('/imgfile/:_id', function ( request, response, next ) {
   pCollStuff
     .then(function ( collStuff ) {
-      var id = mongodb.ObjectId(request.params.id);
+      var id = mongodb.ObjectId(request.params._id);
       return collStuff.find({ _id : id }).toArray();
     })
     .then(function ( docs ) {
       var doc = docs[0];
+      response.set('Cache-Control', 'max-age=600');
       response.set('Content-Type', doc.type);
       response.send(doc.data.buffer);
     })

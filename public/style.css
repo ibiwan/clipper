@@ -1,40 +1,72 @@
+#clippets-col {
+    overflow-y : scroll;
+    height     : 100%;
+}
+
+#controlForm {
+    padding: 30px;
+}
+
 #display {
-    height : 70vh;
+    height : 90vh;
 }
 
 #preview-col {
     display    : none;
-    height     : 100%;
     overflow-y : scroll;
+    height     : 100%;
 }
 
-#clippets-col {
+#search {
+    padding-bottom: 30px;
+}
+
+#search input {
+    background-color: #dfd !important;
+}
+
+#searchClear {
+    pointer-events: auto;
+}
+
+#tag-list-col {
     overflow-y : scroll;
     height     : 100%;
+}
+
+#upload {
+    padding-bottom: 30px;
 }
 
 .delete {
     color : #999;
 }
 
+.form-control-feedback {
+    right: 15px;
+}
+
+.nav-tabs.centered, .nav-pills.centered {
+    text-align:center;
+}
+
+.nav-tabs.centered > li, .nav-pills.centered > li {
+    float:none;
+    display:inline-block;
+    *display:inline; /* ie7 fix */
+    zoom:1; /* hasLayout ie7 trigger */
+}
+
+.well {
+    padding: 10px !important;
+    max-height: 15vh;
+    overflow-y: hidden;
+}
+
 i:before {
     vertical-align : middle;
 }
 
-.upload {
-    height : 30vh;
-}
-
 img {
-    display : block;
-    margin  : 0 auto;
-    width   : 80%;
-}
-
-#search {
-    padding: 30px;
-}
-
-#search input {
-    background-color: #dfd !important;
+    margin  : 0 auto; /* center in well */
 }
