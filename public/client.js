@@ -13,7 +13,7 @@ $.prototype.switchClass = function(remove, add){
 }
 
 var templates = {};
-[ 'tag_row', 'tag_btn', 'tag_btn_simple', 'clippet' ].forEach(function ( t ) {
+[ 'tag_row', 'meta_tag_btn', 'cloud_tag_btn', 'clippet' ].forEach(function ( t ) {
   var template   = $('#' + t).html();
   templates[ t ] = template;
   Mustache.parse(template);
@@ -29,7 +29,7 @@ function makeTagRow(tags){
 
   var tagSet = tagRow.find('.tags');
   tags.sort().reverse().forEach(function(tag){
-    tagSet.prepend(Mustache.render(templates.tag_btn, { tag:tag }));
+    tagSet.prepend(Mustache.render(templates.meta_tag_btn, { tag:tag }));
   });
 
   return tagRow;
@@ -44,7 +44,8 @@ function addImageClip( _id, type, filename, md5str, tags ) {
   var clippet = $(Mustache.render(templates.clippet, { _id:_id, type:type, filename:filename }));
 
   clipSeen[ fingerprint ] = {tags:tags, clippet:clippet};
-  clippet.find('.tagRowHolder').append(makeTagRow(tags)).hide();
+  clippet.find('.tagRowHolder').append(makeTagRow(tags));
+  clippet.hide();
 
   $('#clippets').prepend(clippet); // adds to DOM, so now we can place cursor
   clippet.find('.newTag').focus();
@@ -124,7 +125,7 @@ function showTagSet(){
 
   var tagListCol = $('#tag-list-col').html('');
   $.each(tagFreq, function(i, tf){
-    tagListCol.append(Mustache.render(templates.tag_btn_simple, { tag:tf.tag }));
+    tagListCol.append(Mustache.render(templates.cloud_tag_btn, { tag:tf.tag }));
   });
 }
 

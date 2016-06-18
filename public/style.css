@@ -70,3 +70,7 @@ i:before {
 img {
     margin  : 0 auto; /* center in well */
 }
+
+button.cloud {
+    background-color: #dfd !important;
+}
