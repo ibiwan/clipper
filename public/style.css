@@ -1,48 +1,63 @@
-#clippets-col {
-    overflow-y : scroll;
-    height     : 100%;
+body {
+    height         : 100vh;
+    display        : flex;
+    flex-direction : column
 }
+
+header {
+    margin-bottom: 15px;
+}
+
+main {
+    /* fill remaining space */
+    flex       : 1;
+    overflow-y : scroll;
+}
+
+/* ------------------------------------------------------- */
 
 #controlForm {
-    padding: 30px;
+    padding : 30px;
 }
 
-#display {
-    height : 90vh;
-}
-
-#preview-col {
-    display    : none;
-    overflow-y : scroll;
-    height     : 100%;
-}
-
-#search {
-    padding-bottom: 30px;
-}
+/* ------------------------------------------------------- */
 
 #search input {
-    background-color: #dfd !important;
+    background-color : #dfd;
 }
 
 #searchClear {
-    pointer-events: auto;
+    /* re-enable clickability on "clear" icon */
+    pointer-events : auto;
 }
 
-#tag-list-col {
+/* ------------------------------------------------------- */
+
+#display {
+    height: 97%;
+}
+
+#clippets-col, #tag-list-col, #preview-col, #clippets {
     overflow-y : scroll;
-    height     : 100%;
+    height     : inherit;
 }
 
-#upload {
-    padding-bottom: 30px;
+#clippets-col {
+    padding-left: 0px;
+}
+
+/* ------------------------------------------------------- */
+
+.dropzone {
+    background-color: #ddd;
 }
 
 .delete {
-    color : #999;
+    color : #f33;
 }
 
 .form-control-feedback {
+    /* move "clear search field" icon in from right edge */
     right: 15px;
 }
 
@@ -50,17 +65,22 @@
     text-align:center;
 }
 
-.nav-tabs.centered > li, .nav-pills.centered > li {
+.nav-tabs.centered > li, .nav-pills.centered > li, well {
     float:none;
     display:inline-block;
     *display:inline; /* ie7 fix */
     zoom:1; /* hasLayout ie7 trigger */
 }
 
+.thumb {
+    display: inline-block !important;
+}
+
 .well {
     padding: 10px !important;
-    max-height: 15vh;
+    height: 10vh;
     overflow-y: hidden;
+    margin: 10px auto !important;
 }
 
 i:before {
@@ -68,9 +88,29 @@ i:before {
 }
 
 img {
-    margin  : 0 auto; /* center in well */
+    margin: 0 auto; /* center in well */
 }
 
 button.cloud {
+    border-color: #000 !important;
     background-color: #dfd !important;
+}
+
+.clippet {
+    border-radius: 20px;
+    margin: 5px !important;
+    text-align: center;
+}
+
+.clippet:nth-child(odd){
+    background-color:#deecf3;
+}
+
+.clippet:nth-child(even){
+    background-color:#eee;
+}
+
+.panel {
+    border-radius: 20px;
+    background-color:#888;
 }

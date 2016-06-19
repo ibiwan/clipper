@@ -1,27 +1,28 @@
-var Promise    = require("bluebird");
-var mongodb    = require('mongodb');
-var express    = require('express');
-var app        = express();
-var bodyParser = require('body-parser');
-var fs         = require('fs');
-var md5        = require('md5');
-var multer     = require('multer');
-var upload     = multer({
-                          dest : 'uploads/tmp/'
-                        });
+const Promise    = require("bluebird");
+const mongodb    = require('mongodb');
+const express    = require('express');
+const app        = express();
+const bodyParser = require('body-parser');
+const fs         = require('fs');
+const md5        = require('md5');
+const multer     = require('multer');
+const upload     = multer({ dest : 'uploads/tmp/' });
+const util       = require('util');
 
 app.use(express.static('public'));
-app.use(bodyParser.json());        // to support JSON-encoded bodies
-app.use(bodyParser.urlencoded({    // to support URL-encoded bodies
-                                extended : true
-                              }));
-
-var db_uri = 'mongodb://' + process.env.DB_USER + ':' + process.env.DB_PASS + '@' + process.env.DB_HOST + ':' +
-             process.env.DB_PORT + '/' + process.env.DB_NAME;
+app.use(bodyParser.json());                          // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({ extended : true })); // to support URL-encoded bodies
+app.use(function (req, resp, next) {
+  console.log(req.originalUrl, req.params);
+  next();
+});
+var db_uri = util.format( 'mongodb://%s:%s@%s:%s/%s',
+  process.env.DB_USER, process.env.DB_PASS, process.env.DB_HOST, process.env.DB_PORT, process.env.DB_NAME
+);
 var pDb    = mongodb.MongoClient.connect(db_uri, { promiseLibrary : Promise });
 
-app.get("/", function ( request, response ) {
-  response.sendFile(__dirname + '/views/index.html');
+app.get("/", function ( req, resp ) {
+  resp.sendFile(__dirname + '/views/index.html');
 });
 
 pCollStuff = pDb.then(function ( db ) {
@@ -31,46 +32,47 @@ pCollStuff = pDb.then(function ( db ) {
 app.post(
   "/file-upload",
   upload.single('file'),
-  function ( request, response, next ) {
+  function ( req, resp, next ) {
     pCollStuff.then(function ( collStuff ) {
-        var original = request.file.originalname;
-        var filename = request.file.destination + request.file.filename;
+        var original = req.file.originalname;
+        var filename = req.file.destination + req.file.filename;
         var content  = fs.readFileSync(filename);
         var hash     = md5(content);
         var firstTag = original.toLowerCase().replace(/ /g, '-');
         var doc      = {
           'data' : content,
           'md5' : hash,
-          'type' : request.file.mimetype,
+          'type' : req.file.mimetype,
           'filename' : original,
           'tags' : [ firstTag ]
         };
 
-        collStuff.insert(doc)
-                 .then(function ( resp ) { // insert, update, find, drop
-                   var id = resp.ops[ 0 ]._id;
-                   response.send({ id : id, hash : hash });
-                   return id;
-                 })
-                 .catch(function ( err ) {
-                   if ( err.code === 11000 ) {
-                     return collStuff
-                       .find({ md5 : hash, filename : original })
-                       .toArray()
-                       .then(function ( matched ) {
-                         response.send({ id : matched._id, hash : matched.hash });
-                       });
-                   }
-                   throw err;
-                 })
-                 .catch(next)
-                 .finally(function () {
-                   fs.unlink(request.file.destination + request.file.filename);
+        collStuff
+           .insert(doc)
+           .then(function ( resp ) {
+             var id = resp.ops[ 0 ]._id;
+             resp.send({ id : id, hash : hash });
+             return id;
+           })
+           .catch(function ( err ) {
+             if ( err.code === 11000 ) {
+               return collStuff
+                 .find({ md5 : hash, filename : original })
+                 .toArray()
+                 .then(function ( matched ) {
+                   resp.send({ id : matched._id, hash : matched.hash });
                  });
+             }
+             throw err;
+           })
+           .catch(next)
+           .finally(function () {
+             fs.unlink(req.file.destination + req.file.filename);
+           });
       }).catch(next);
   });
 
-app.get('/clippets', function ( request, response, next ) {
+app.get('/clippets', function ( req, resp, next ) {
   pCollStuff.then(function ( collStuff ) {
       return collStuff
         .find({}, { data : 0 })
@@ -78,11 +80,11 @@ app.get('/clippets', function ( request, response, next ) {
         .toArray();
     })
     .then(function ( arr ) {
-      return response.json(arr);
+      return resp.json(arr);
     }).catch(next);
 });
 
-function updateStuff(request, response, next, queryDoc, updateDoc){
+function updateStuff(req, resp, next, queryDoc, updateDoc){
   updateDoc['$set'] = {
     lastUpdated: Date.now()
   };
@@ -95,42 +97,41 @@ function updateStuff(request, response, next, queryDoc, updateDoc){
             .toArray();
         })
         .then(function ( arr ) {
-          return response.json(arr[ 0 ]);
+          return resp.json(arr[ 0 ]);
         });
   }).catch(next);
 }
 
-app.get('/tag/delete/:_id/:tag', function ( request, response, next ) {
-  var idObj     = mongodb.ObjectId(request.params._id);
+app.get('/tag/delete/:_id/:tag', function ( req, resp, next ) {
+  var idObj     = mongodb.ObjectId(req.params._id);
   var queryDoc  = { _id : idObj };
-  var updateDoc = { '$pullAll' : { tags : [ request.params.tag ] } };
-  return updateStuff(request, response, next, queryDoc, updateDoc);
+  var updateDoc = { '$pullAll' : { tags : [ req.params.tag ] } };
+  return updateStuff(req, resp, next, queryDoc, updateDoc);
 });
 
-app.get('/tag/add/:_id/:tag', function(request, response, next){
-  var idObj     = mongodb.ObjectId(request.params._id);
+app.get('/tag/add/:_id/:tag', function(req, resp, next){
+  var idObj     = mongodb.ObjectId(req.params._id);
   var queryDoc  = { _id : idObj };
-  var updateDoc = { '$addToSet' : { tags : request.params.tag } };
-  return updateStuff(request, response, next, queryDoc, updateDoc);
+  var updateDoc = { '$addToSet' : { tags : req.params.tag } };
+  return updateStuff(req, resp, next, queryDoc, updateDoc);
 })
 
-app.get('/imgfile/:_id', function ( request, response, next ) {
+app.get('/imgfile/:_id', function ( req, resp, next ) {
   pCollStuff
     .then(function ( collStuff ) {
-      var id = mongodb.ObjectId(request.params._id);
+      var id = mongodb.ObjectId(req.params._id);
       return collStuff.find({ _id : id }).toArray();
     })
     .then(function ( docs ) {
       var doc = docs[0];
-      response.set('Cache-Control', 'max-age=600');
-      response.set('Content-Type', doc.type);
-      response.send(doc.data.buffer);
+      resp.set('Cache-Control', 'max-age=600');
+      resp.set('Content-Type', doc.type);
+      resp.send(doc.data.buffer);
     })
     .catch(next);
 });
 
 listener = app.listen(3000, function () {
-  console.log(
     'Your app is listening on port '
-    + listener.address().port);
+    + listener.address().port;
 });
