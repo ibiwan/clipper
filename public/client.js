@@ -146,23 +146,19 @@ function matchTermsTags(terms, tags){
   });
 }
 
-function updateFilter(){
-  console.log('updating filter');
-  
+function updateFilter(){  
   $('.clippet').hide();
 
   var searchString = $('#searchField').val();
   $('#searchClear').toggle(searchString !== '');
   var searchTerms = $.trim(searchString).saneSplit(' ');
 
-  console.log('search terms', searchTerms);
-
   var nShown = 0;
   $.each(clipSeen, function(fingerprint, clip){
     if( nShown >= 7 ) {
       return;
     }
-    if( searchTerms.length || matchTermsTags(searchTerms, clip.tags) ){
+    if( searchTerms.length === 0 || matchTermsTags(searchTerms, clip.tags) ){
       unHide(clip.clippet);
       nShown++;
     }
