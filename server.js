@@ -1,3 +1,5 @@
+console.log('server.js');
+
 const Promise    = require("bluebird");
 const express    = require('express');
 const app        = express();

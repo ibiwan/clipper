@@ -1,3 +1,5 @@
+console.log('server-db.js');
+
 const Promise = require('bluebird');
 const mongodb = require('mongodb');
 const util    = require('util');
