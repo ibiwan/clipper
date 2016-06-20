@@ -79,17 +79,17 @@ function getImageContent(_id){
     });
 }
 
-function editTag(_id, tag, verb){
+function editTag(_id, tag, verb){ // if using pullAll, tag must be an array
   var queryDoc  = { _id : mongodb.ObjectId(_id) };
   var updateDoc = { 
-    verb   : { tags : [ req.params.tag ] } ,
     '$set' : { lastUpdated: Date.now() }
   };
-  pCollStuff.then(function(collStuff){
-    collStuff
+  updateDoc[verb] = { tags : tag };
+  return pCollStuff.then(function(collStuff){
+    return collStuff
       .updateMany(queryDoc, updateDoc)
       .then(function(){
-        return find(collStuff, queryDoc, false);
+        return find(collStuff, queryDoc, true);
       })
       .then(function(arr){
         return arr[0];
@@ -102,7 +102,7 @@ function addTag(_id, tag){
 }
 
 function deleteTag(_id, tag){
-  return editTag(_id, tag, '$pullAll');
+  return editTag(_id, [tag], '$pullAll');
 }
 
 exports.addTag          = addTag;

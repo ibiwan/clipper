@@ -41,13 +41,13 @@ app.get('/clippets', function ( req, resp, next ) {
 app.get('/tag/delete/:_id/:tag', function ( req, resp, next ) {
   serverDb.deleteTag(req.params._id, req.params.tag).then(function(doc){
     return resp.json(doc);
-  });
+  }).catch(next);
 });
 
 app.get('/tag/add/:_id/:tag', function(req, resp, next){
   serverDb.addTag(req.params._id, req.params.tag).then(function(doc){
     return resp.json(doc);
-  });
+  }).catch(next);
 })
 
 app.get('/imgfile/:_id', function ( req, resp, next ) {
