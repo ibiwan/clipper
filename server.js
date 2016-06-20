@@ -58,7 +58,7 @@ app.get('/imgfile/:_id', function ( req, resp, next ) {
     }).catch(next);
 });
 
-listener = app.listen(80, function () {
+listener = app.listen(process.env.PORT || 8080, function () {
     'Your app is listening on port '
     + listener.address().port;
 });
