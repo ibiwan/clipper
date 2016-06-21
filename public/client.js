@@ -70,7 +70,7 @@ var preview_g = (function(events){
   function show( imgUrl, keep ) {
     if ( previewState === 'off' || keep ) {
       previewState = keep ? 'keep' : 'moment';
-      $('.thumb').switchClass('col-xs-3 col-md-2', 'col-xs-10 col-md-9');
+      $('.thumb').switchClass('col-xs-3 col-md-2', 'col-xs-12');
       $('.metadata').hide();
       $('#preview-col').show().find('img').attr('src', imgUrl);
       $('#clippets-col').switchClass('col-xs-10 col-md-9', 'col-xs-3 col-md-2');
@@ -81,7 +81,7 @@ var preview_g = (function(events){
   function hide( force ) {
     if ( previewState === 'moment' || (previewState === 'keep' && force) ) {
       previewState = 'off';
-      $('.thumb').switchClass('col-xs-10 col-md-9', 'col-xs-3 col-md-2');
+      $('.thumb').switchClass('col-xs-12', 'col-xs-3 col-md-2');
       $('.metadata').show();
       $('#preview-col').hide();
       $('#tag-list-col').show();
@@ -98,8 +98,6 @@ var preview_g = (function(events){
   });
 
   return {
-    show : show,
-    hide : hide,
     true:true
   };
 })(events_g);
@@ -109,6 +107,12 @@ var ui_g = (function(events){
     var tag = $(deleteButton).closest('.tag').find('span').text();
     var _id = $(deleteButton).closest('.clippet').data('_id');
     events.publish('/api/deleteTag', {_id:_id, tag:tag});
+    e.stopPropagation();
+  }
+
+  function deleteClippetButtonPressed(e, deleteButton){
+    var _id = $(deleteButton).closest('.clippet').data('_id');
+    events.publish('/api/deleteClippet', {_id:_id});
     e.stopPropagation();
   }
 
@@ -130,7 +134,7 @@ var ui_g = (function(events){
 
   Dropzone.options.drop = {
     init : function () {
-      this.on("complete", function(){
+      this.on("success", function(){
         events.publish('/api/getList');
       });
     }
@@ -140,18 +144,19 @@ var ui_g = (function(events){
     return $(well).find('img').attr('src');
   }
 
-  $(document)   .on('click',      '.delete',      function (e) { deleteTagButtonPressed(e, this);                                      });
-  $(document)   .on('change',     '.newTag',      function (e) { newTagInputChanged(this);                                             });
-  $(document)   .on('submit',     '.newTagForm',  function (e) { e.preventDefault();                                                   });
-  $(document)   .on('submit',     '#searchForm',  function (e) { e.preventDefault();                                                   });
-  $(document)   .on('click',      '.modeButton',  function (e) { selectModeClicked(this);                                              });
-  $(document)   .on('click',      '.tag',         function (e) { searchTermClicked(this);                                              });
-  $(document)   .on('keyup',      '#searchField', function (e) { events.publish('/refresh');                                           });
-  $(document)   .on('click',      '#searchClear', function (e) { events.publish('/search/clear');                                      });
-  $('#preview') .on('click',      'img',          function (e) { events.publish('/preview/hide', {force:true});                        });
-  $('#clippets').on('mouseleave', '.well',        function (e) { events.publish('/preview/hide', {force:false});                       });
-  $('#clippets').on('click',      '.well',        function (e) { events.publish('/preview/show', {url:urlFromWell(this), keep:true});  });
-  $('#clippets').on('mouseenter', '.well',        function (e) { events.publish('/preview/show', {url:urlFromWell(this), keep:false}); });
+  $(document)   .on('click',      '.delete-tag',     function (e) { deleteTagButtonPressed(e, this);                                      });
+  $(document)   .on('click',      '.delete-clippet', function (e) { deleteClippetButtonPressed(e, this);                                      });
+  $(document)   .on('change',     '.newTag',         function (e) { newTagInputChanged(this);                                             });
+  $(document)   .on('submit',     '.newTagForm',     function (e) { e.preventDefault();                                                   });
+  $(document)   .on('submit',     '#searchForm',     function (e) { e.preventDefault();                                                   });
+  $(document)   .on('click',      '.modeButton',     function (e) { selectModeClicked(this);                                              });
+  $(document)   .on('click',      '.tag',            function (e) { searchTermClicked(this);                                              });
+  $(document)   .on('keyup',      '#searchField',    function (e) { events.publish('/refresh', {clearIfEmpty:false});                     });
+  $(document)   .on('click',      '#searchClear',    function (e) { events.publish('/search/clear');                                      });
+  $('#preview') .on('click',      'img',             function (e) { events.publish('/preview/hide', {force:true});                        });
+  $('#clippets').on('mouseleave', '.well',           function (e) { events.publish('/preview/hide', {force:false});                       });
+  $('#clippets').on('click',      '.well',           function (e) { events.publish('/preview/show', {url:urlFromWell(this), keep:true});  });
+  $('#clippets').on('mouseenter', '.well',           function (e) { events.publish('/preview/show', {url:urlFromWell(this), keep:false}); });
 
   function updateConfig(fast){
     $.each({
@@ -190,7 +195,7 @@ var clipart_g = (function(factory, events){
     if(clips.filter(function(clip){
       return addClip(clip);
     })){
-      events.publish('/refresh');
+      events.publish('/refresh', {clearIfEmpty:true});
     }
   }
 
@@ -252,7 +257,6 @@ var clipart_g = (function(factory, events){
   });
 
   return {
-    show    : show,
     getSeen : getSeen,
     true:true
   };
@@ -285,7 +289,7 @@ var search_g = (function(clipart, factory, events){
     });
   }
 
-  function update(){  
+  function update(clearIfEmpty){  
     $('.clippet').hide();
 
     var searchString = $('#searchField').val();
@@ -295,20 +299,30 @@ var search_g = (function(clipart, factory, events){
     var nShown = 0;
     $.each(clipart.getSeen(), function(fingerprint, clip){
       if( nShown >= 7 ) {
-        return;
+        return false;
       }
       if( searchTerms.length === 0 || matchTermsTags(searchTerms, clip.tags) ){
         unHide(clip.clippet);
         nShown++;
       }
     });
+    if(clearIfEmpty && nShown === 0){
+      clear();
+      return true;
+    }
+    return false;
   }
 
   function addTerm(tag){
     var field = $('#searchField');
     field.val(tag + ' ' + field.val());
     field.focus();
-    update();
+    var cleared = update(true);
+    if(cleared){
+      field.val(tag + ' ' + field.val());
+      field.focus();
+      var cleared = update(false);
+    }
   }
 
   function showTagSet(){
@@ -335,7 +349,8 @@ var search_g = (function(clipart, factory, events){
   }
 
   events.subscribe('/refresh', function(o){
-    update();
+    update(o.clearIfEmpty);
+    showTagSet();
   });
 
   events.subscribe('/search/addTerm', function(o){
@@ -376,9 +391,19 @@ var api_g = (function(events){
     $.getJSON({ url:'clippets' })
      .then(function(data){
         events.publish('/clipart/replaceList', {clips:data});
-        events.publish('/search/showTagSet');
      });
   }
+
+  function deleteClippet( _id ) {
+    $.getJSON({ url: 'delete/' + _id })
+    .then(function(data){
+        getList();
+    });
+  }
+
+  events.subscribe('/api/deleteClippet', function(o){
+    deleteClippet(o._id);
+  });
 
   events.subscribe('/api/addTag', function(o){
     addTag(o._id, o.tag);
@@ -400,8 +425,8 @@ var api_g = (function(events){
 function startup(events){
   return function(){
     $('#preview-col').hide();
-    events.publish('/refresh');
     events.publish('/api/getList');
+    events.publish('/refresh', {clearIfEmpty:true});
   }
 }
 

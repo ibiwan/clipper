@@ -53,63 +53,67 @@
             </div>
         </main>
 
-        <script id="tag_row" type="x-tmpl-mustache">
-            <div class="tagRow row btn-toolbar">
-                <form class="form-inline newTagForm">
-                    <div class="tags">
-                        <span class="newTagSpan">
-                            <input type="text" class="form-control newTag" placeholder="add tag">
-                        </span>
-                    </div>
-                </form>
-            </div>
-        </script>
-
-        <script id="meta_tag_btn" type="x-tmpl-mustache">
-            <span>
-                <button type="button" class="tag btn btn-small btn-default meta">
-                    <span>{{ tag }}</span>&nbsp;
-                    <i class="delete glyphicon glyphicon-remove-sign color-grey pull-right"></i>
-                </button>
-            </span>
-        </script>
-
-        <script id="cloud_tag_btn" type="x-tmpl-mustache">
-            <span>
-                <button type="button" class="tag btn btn-small btn-default cloud">
-                    <span>{{ tag }}</span>
-                </button>
-            </span>
-        </script>
-
-        <script id="clippet" type="x-tmpl-mustache">
-            <div class="clippet row" data-_id="{{ _id }}">
-                <div class="thumb col-xs-3 col-md-2">
-                    <div class="well">
-                        <img class="img-responsive"
-                            data-src="imgfile/{{ _id }}"
-                            type="{{ type }}"
-                            alt="{{ filename }}"
-                            >
-                    </div>
-                </div>
-                <div class="metadata col-xs-9">
-                    <div class="row filename">
-                        <div class="col-xs-12">{{ filename }}</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-12 tagRowHolder"></div>
-                    </div>
-                </div>
-            </div>
-        </script>
-
-        <script src="https://code.jquery.com/jquery-2.2.1.min.js"
-            integrity="sha256-gvQgAFzTH6trSrAWoH1iPo9Xc96QxSZ3feW6kem+O00="
-            crossorigin="anonymous"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js"></script>
-        <script src="/client.js"></script>
     </body>
+
+    <script id="tag_row" type="x-tmpl-mustache">
+        <div class="tagRow row btn-toolbar">
+            <form class="form-inline newTagForm">
+                <div class="tags">
+                    <span class="newTagSpan">
+                        <input type="text" class="form-control newTag" placeholder="add tag">
+                    </span>
+                </div>
+            </form>
+        </div>
+    </script>
+
+    <script id="meta_tag_btn" type="x-tmpl-mustache">
+        <span>
+            <button type="button" class="tag btn btn-small btn-default meta">
+                <span>{{ tag }}</span>&nbsp;
+                <i class="delete delete-tag glyphicon glyphicon-remove-sign color-grey pull-right"></i>
+            </button>
+        </span>
+    </script>
+
+    <script id="cloud_tag_btn" type="x-tmpl-mustache">
+        <span>
+            <button type="button" class="tag btn btn-small btn-default cloud">
+                <span>{{ tag }}</span>
+            </button>
+        </span>
+    </script>
+
+    <script id="clippet" type="x-tmpl-mustache">
+        <div class="clippet row" data-_id="{{ _id }}">
+            <div class="thumb col-xs-3 col-md-2">
+                <div class="well">
+                    <img class="img-responsive"
+                        data-src="imgfile/{{ _id }}"
+                        type="{{ type }}"
+                        alt="{{ filename }}"
+                        >
+                </div>
+            </div>
+            <div class="metadata col-xs-9">
+                <div class="row filename">
+                    <div class="col-xs-12">
+                        <i class="delete delete-clippet glyphicon glyphicon-remove-sign"></i>
+                        {{ filename }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 tagRowHolder"></div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script src="https://code.jquery.com/jquery-2.2.1.min.js"
+        integrity="sha256-gvQgAFzTH6trSrAWoH1iPo9Xc96QxSZ3feW6kem+O00="
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js"></script>
+    <script src="/client.js"></script>
 </html>

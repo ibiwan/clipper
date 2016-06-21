@@ -1,5 +1,9 @@
 console.log('server-db.js');
 
+const EventEmitter = require('events');
+var emitter = new EventEmitter();
+emitter.setMaxListeners(15);
+
 const Promise = require('bluebird');
 const mongodb = require('mongodb');
 const util    = require('util');
@@ -17,7 +21,7 @@ pCollStuff = pDb.then(function ( db ) {
 });
 
 function formatTag(str){
-  return str.toLowerCase().replace(/ /g, '-');
+  return str.toLowerCase();//.replace(/ /g, '-');
 }
 
 function find(coll, query, excludeContent){
@@ -44,7 +48,7 @@ function uploadFile(originalName, localName, type){
       'lastUpdated': Date.now()
     };
 
-    collStuff
+    return collStuff
       .insert(newDoc)
       .then(function ( resp ) {
         var id = resp.ops[ 0 ]._id;
@@ -54,7 +58,7 @@ function uploadFile(originalName, localName, type){
         if ( err.code === 11000 ) {
           return find(collStuff, { md5 : hash, filename : originalName })
             .then(function ( matched ) {
-              return { id : matched._id, hash : matched.hash };
+              return { id : matched[0]._id, hash : hash };
             });
         }
         throw err;
@@ -79,12 +83,8 @@ function getImageContent(_id){
     });
 }
 
-function editTag(_id, tag, verb){ // if using pullAll, tag must be an array
+function editTag(_id, updateDoc){ 
   var queryDoc  = { _id : mongodb.ObjectId(_id) };
-  var updateDoc = { 
-    '$set' : { lastUpdated: Date.now() }
-  };
-  updateDoc[verb] = { tags : tag };
   return pCollStuff.then(function(collStuff){
     return collStuff
       .updateMany(queryDoc, updateDoc)
@@ -98,15 +98,31 @@ function editTag(_id, tag, verb){ // if using pullAll, tag must be an array
 }
 
 function addTag(_id, tag){
-  return editTag(_id, formatTag(tag), '$addToSet');
+  var updateDoc = {
+    '$set'      : { lastUpdated: Date.now() },
+    '$addToSet' : { tags : { $each: tag.toLowerCase().split(' ') } }
+  };
+  return editTag(_id, updateDoc);
 }
 
 function deleteTag(_id, tag){
-  return editTag(_id, [tag], '$pullAll');
+  var updateDoc = {
+    '$set'     : { lastUpdated: Date.now() },
+    '$pullAll' : { tags : [tag] }
+  };
+  return editTag(_id, updateDoc);
+}
+
+function deleteClippet(_id){
+  return pCollStuff.then(function(collStuff){
+    var queryDoc = { _id : mongodb.ObjectId(_id) };
+    return collStuff.deleteOne(queryDoc);
+  });
 }
 
 exports.addTag          = addTag;
 exports.deleteTag       = deleteTag;
 exports.uploadFile      = uploadFile;
 exports.getClippets     = getClippets;
+exports.deleteClippet   = deleteClippet;
 exports.getImageContent = getImageContent;

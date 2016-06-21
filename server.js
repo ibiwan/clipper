@@ -12,49 +12,56 @@ app.use(express.static('public'));
 app.use(bodyParser.json());                          // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({ extended : true })); // to support URL-encoded bodies
 
-app.use(function (req, resp, next) {
+app.use(function (req, res, next) {
   console.log(req.originalUrl, req.params);
   next();
 });
 
-app.get("/", function ( req, resp ) {
-  resp.sendFile(__dirname + '/views/index.html');
+app.get("/", function ( req, res ) {
+  res.sendFile(__dirname + '/views/index.html');
 });
 
 app.post( "/file-upload", upload.single('file'),
-  function ( req, resp, next ) {
+  function ( req, res, next ) {
     serverDb
       .uploadFile(req.file.originalname, req.file.destination + req.file.filename, req.file.mimetype)
       .then(function(idHash){
-        resp.send(idHash);
+        res.send(idHash);
       })
       .catch(next);
 
   });
 
-app.get('/clippets', function ( req, resp, next ) {
+app.get('/clippets', function ( req, res, next ) {
   serverDb.getClippets().then(function(arr){
-      return resp.json(arr);
+      return res.json(arr);
   }).catch(next);
 });
 
-app.get('/tag/delete/:_id/:tag', function ( req, resp, next ) {
+app.get('/delete/:_id', function(req, res, next){
+  var _id = req.params._id;
+  serverDb.deleteClippet(_id).then(function(result){
+    return res.json({success:true});
+  }).catch(next);
+});
+
+app.get('/tag/delete/:_id/:tag', function ( req, res, next ) {
   serverDb.deleteTag(req.params._id, req.params.tag).then(function(doc){
-    return resp.json(doc);
+    return res.json(doc);
   }).catch(next);
 });
 
-app.get('/tag/add/:_id/:tag', function(req, resp, next){
+app.get('/tag/add/:_id/:tag', function(req, res, next){
   serverDb.addTag(req.params._id, req.params.tag).then(function(doc){
-    return resp.json(doc);
+    return res.json(doc);
   }).catch(next);
 })
 
-app.get('/imgfile/:_id', function ( req, resp, next ) {
+app.get('/imgfile/:_id', function ( req, res, next ) {
   serverDb.getImageContent(req.params._id).then(function(doc){
-      resp.set('Cache-Control', 'max-age=600');
-      resp.set('Content-Type', doc.type);
-      resp.send(doc.data);
+      res.set('Cache-Control', 'max-age=600');
+      res.set('Content-Type', doc.type);
+      res.send(doc.data);
     }).catch(next);
 });
 

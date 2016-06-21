@@ -79,6 +79,7 @@ main {
 .well {
     padding: 10px !important;
     height: 10vh;
+    max-width: 10vh;
     overflow-y: hidden;
     margin: 10px auto !important;
 }
@@ -99,7 +100,6 @@ button.cloud {
 .clippet {
     border-radius: 20px;
     margin: 5px !important;
-    text-align: center;
 }
 
 .clippet:nth-child(odd){
