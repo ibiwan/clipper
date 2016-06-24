@@ -7,12 +7,10 @@ const favicon      = require('static-favicon');
 const logger       = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser   = require('body-parser');
-const multer       = require('multer');
 const dbConfig     = require('./db');
 const mongoose     = require('mongoose');
 
 mongoose.connect(dbConfig.url);
-const upload   = multer({ dest : 'uploads/tmp/' });
 
 var app = express();
 

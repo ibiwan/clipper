@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 const serverDb = require('../server-db');
+const multer       = require('multer');
+const upload   = multer({ dest : 'uploads/tmp/' });
 
 var isAuthenticated = function (req, res, next) {
 	// if user is authenticated in the session, call the next() to call the next request handler 
@@ -63,6 +65,49 @@ module.exports = function(passport){
 	      res.send(doc.data);
 	    }).catch(next);
 	});
+
+
+
+	router.post( "/file-upload", upload.single('file'),
+	  function ( req, res, next ) {
+	    serverDb
+	      .uploadFile(req.file.originalname, req.file.destination + req.file.filename, req.file.mimetype)
+	      .then(function(idHash){
+	        res.send(idHash);
+	      })
+	      .catch(next);
+
+	  });
+
+	router.get('/delete/:_id', function(req, res, next){
+	  var _id = req.params._id;
+	  serverDb.deleteClippet(_id).then(function(result){
+	    return res.json({success:true});
+	  }).catch(next);
+	});
+
+	router.get('/tag/delete/:_id/:tag', function ( req, res, next ) {
+	  serverDb.deleteTag(req.params._id, req.params.tag).then(function(doc){
+	    return res.json(doc);
+	  }).catch(next);
+	});
+
+	router.get('/tag/add/:_id/:tag', function(req, res, next){
+	  serverDb.addTag(req.params._id, req.params.tag).then(function(doc){
+	    return res.json(doc);
+	  }).catch(next);
+	})
+
+	router.get('/imgfile/:_id', function ( req, res, next ) {
+	  serverDb.getImageContent(req.params._id).then(function(doc){
+	      res.set('Cache-Control', 'max-age=600');
+	      res.set('Content-Type', doc.type);
+	      res.send(doc.data);
+	    }).catch(next);
+	});
+
+
+
 
 	return router;
 }
