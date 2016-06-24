@@ -1,0 +1,45 @@
+extends layout
+
+block styles
+	link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css')
+	link(rel='stylesheet', href='https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.css')
+
+block content
+	header.container
+		h1.row.text-center A clippet manager
+		div#controlForm.row
+			ul.nav.nav-pills.centered
+				li#searchEnabled.modeButton.active(role='presentation')
+					a(href='#') Search
+				li#uploadEnabled.modeButton(role='presentation')
+					a(href='#') Upload/Edit
+				li#deleteEnabled.modeButton(role='presentation')
+					a(href='#') Delete
+		#search.row
+			form#searchForm
+				.col-xs-12.form-group.has-feedback
+					input#searchField.form-control.input-lg.text-center(name='search', type='text', placeholder='FILTER TAGS', autocomplete='off')
+					i#searchClear.glyphicon.glyphicon-remove-sign.form-control-feedback
+		#upload.row
+			form#drop.dropzone(action='/file-upload')
+				.fallback
+					input(name='file', type='file', multiple)
+
+	main.container
+		#display.row
+			#clippets-col.col-xs-10.col-md-9
+				#clippets
+			#tag-list-col.col-xs-2.col-md-3.panel.panel-default.text-center
+			#preview-col.col-xs-9.col-md-10
+				#preview
+					img(src='', width='100%')
+
+block templates
+	include ./clippet-templates.jade
+
+block includes
+	script(src='https://code.jquery.com/jquery-2.2.1.min.js')
+	script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js')
+	script(src='https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js')
+	script(src='https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js')
+	script(src='client.js')

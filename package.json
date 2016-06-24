@@ -4,33 +4,28 @@
   "description" : "Everything at your fingertips!",
   "main"        : "server.js",
   "scripts"     : {
-    "start": "node server.js"
+    "start"     : "node ./bin/www"
   },
   "dependencies": {
-    "express"    : "^4.12.4",
-    "mongodb"    : "^2.0.0",
-    "bluebird"   : "*",
-    "body-parser": "*",
-    "multer"     : "*",
-    "md5"        : "*",
-    "nodemon"    : "*"
+    "express"         : "~4.2.0",
+    "static-favicon"  : "~1.0.0",
+    "morgan"          : "~1.0.0",
+    "cookie-parser"   : "~1.0.1",
+    "body-parser"     : "~1.0.0",
+    "express-session" : "~1.0.4",
+    "debug"           : "~0.7.4",
+    "jade"            : "~1.3.0",
+    "passport"        : "~0.2.0",
+    "passport-local"  : "~1.0.0",
+    "mongoose"        : "~3.8.12",
+    "bcrypt-nodejs"   : "*",
+    "connect-flash"   : "*",
+    "mongodb"         : "^2.0.0",
+    "bluebird"        : "*",
+    "multer"          : "*",
+    "md5"             : "*",
+    "nodemon"         : "*"
   },
-  "engines"     : {
-    "node": "^6.0.0"
-  },
-  "repository"  : {
-    "type": "git",
-    "url" : "https://hyperdev.com/#!/project/clipper"
-  },
-  "keywords"    : [
-    "node",
-    "hyperdev",
-    "express",
-    "then-mongo",
-    "mongodb",
-    "database",
-    "multer"
-  ],
-  "author"      : "Jeremy Kent <ibiwan@gmail.com>",
-  "license"     : "MIT"
+  "author"  : "Jeremy Kent <ibiwan@gmail.com>",
+  "license" : "MIT"
 }

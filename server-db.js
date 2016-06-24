@@ -1,20 +1,17 @@
 console.log('server-db.js');
 
-const EventEmitter = require('events');
-var emitter = new EventEmitter();
-emitter.setMaxListeners(15);
+// const EventEmitter = require('events');
+// var emitter = new EventEmitter();
+// emitter.setMaxListeners(15);
 
-const Promise = require('bluebird');
-const mongodb = require('mongodb');
-const util    = require('util');
-const md5     = require('md5');
-const fs      = require('fs');
+const Promise  = require('bluebird');
+const mongodb  = require('mongodb');
+const util     = require('util');
+const md5      = require('md5');
+const fs       = require('fs');
+const dbConfig = require('./db');
 
-var db_uri = util.format( 'mongodb://%s:%s@%s:%s/%s',
-  process.env.DB_USER, process.env.DB_PASS, process.env.DB_HOST, process.env.DB_PORT, process.env.DB_NAME
-);
-
-var pDb    = mongodb.MongoClient.connect(db_uri, { promiseLibrary : Promise });
+var pDb    = mongodb.MongoClient.connect(dbConfig.url, { promiseLibrary : Promise });
 
 pCollStuff = pDb.then(function ( db ) {
   return db.collection('stuff');
@@ -120,9 +117,11 @@ function deleteClippet(_id){
   });
 }
 
-exports.addTag          = addTag;
-exports.deleteTag       = deleteTag;
-exports.uploadFile      = uploadFile;
-exports.getClippets     = getClippets;
-exports.deleteClippet   = deleteClippet;
-exports.getImageContent = getImageContent;
+module.exports = {
+  addTag          : addTag,
+  deleteTag       : deleteTag,
+  uploadFile      : uploadFile,
+  getClippets     : getClippets,
+  deleteClippet   : deleteClippet,
+  getImageContent : getImageContent,
+};
