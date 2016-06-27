@@ -31,7 +31,7 @@ var events_g = (function(){
 
 var factory_g = (function(events){
   var templates    = {};
-  [ 'tag_row', 'meta_tag_btn', 'cloud_tag_btn', 'clippet' ].forEach(function ( t ) {
+  [ 'tag_row', 'meta_tag_btn', 'cloud_tag_btn', 'clippet', 'content_image' ].forEach(function ( t ) {
     Mustache.parse(templates[ t ] = $('#' + t).html());
   });
 
@@ -41,6 +41,10 @@ var factory_g = (function(events){
 
   function clippet(_id, type, filename){
     return $(Mustache.render(templates.clippet, { _id:_id, type:type, filename:filename }));
+  }
+
+  function contentImage(_id, type, filename){
+    return $(Mustache.render(templates.content_image, { _id:_id, type:type, filename:filename }));
   }
 
   function metaTagButton(tag){
@@ -54,6 +58,7 @@ var factory_g = (function(events){
   return {
     tagRow         : tagRow,
     clippet        : clippet,
+    contentImage   : contentImage,
     metaTagButton  : metaTagButton,
     cloudTagButton : cloudTagButton,
     true:true
@@ -223,7 +228,10 @@ var clipart_g = (function(factory, events){
       clipSeen[ fingerprint ].clippet.remove();
     }
 
+    var content = factory.contentImage(_id, type, filename);
     var clippet = factory.clippet(_id, type, filename);
+
+    clippet.find('.well').append(content);
 
     clipSeen[ fingerprint ] = {tags:tags, clippet:clippet};
     clippet.find('.tagRowHolder').append(makeTagRow(tags));
@@ -246,6 +254,8 @@ var clipart_g = (function(factory, events){
         return false;
         break;
     }
+
+
   }
 
   events.subscribe('/clipart/addOne', function(o){

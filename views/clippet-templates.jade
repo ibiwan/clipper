@@ -1,29 +1,28 @@
 block templates
 
-	script#tag_row(type='x-tmpl-mustache')
+	script#tag_row(type='text/mustache')
 		.tagRow.row.btn-toolbar
 			form.form-inline.newTagForm
 				.tags
 					span.newTagSpan
 						input.form-control.newTag(type='text', placeholder='add tag')
 
-	script#meta_tag_btn(type='x-tmpl-mustache')
-		span
-			button.tag.btn.btn-small.btn-default.meta(type='button')
-				span {{ tag }}
-				| &nbsp;
-				i.delete.delete-tag.glyphicon.glyphicon-remove-sign.color-grey.pull-right
+	script#meta_tag_btn(type='text/mustache')
+		button.tag.btn.btn-small.btn-default.meta(type='button')
+			span {{ tag }} &nbsp;
+			i.delete.delete-tag.glyphicon.glyphicon-remove-sign.color-grey.pull-right
 
-	script#cloud_tag_btn(type='x-tmpl-mustache')
-		span
-			button.tag.btn.btn-small.btn-default.cloud(type='button')
-				span {{tag}}
+	script#cloud_tag_btn(type='text/mustache')
+		button.tag.btn.btn-small.btn-default.cloud(type='button')
+			span {{tag}}
 				
-	script#clippet(type='x-tmpl-mustache')
+	script#content_image(type='text/mustache')
+		img.img-responsive(data-src='imgfile/{{ _id }}', type='{{ type }}', alt='{{ filename }}')
+
+	script#clippet(type='text/mustache')
 		.clippet.row(data-_id='{{ _id }}')
 			.thumb.col-xs-3.col-md-2
 				.well
-					img.img-responsive(data-src='imgfile/{{ _id }}', type='{{ type }}', alt='{{ filename }}')
 			.metadata.col-xs-9
 				.row.filename
 					.col-xs-12
