@@ -58,15 +58,13 @@ module.exports = function(passport){
 	  }).catch(next);
 	});
 
-	router.get('/imgfile/:_id', function ( req, res, next ) {
+	router.get('/blob/:_id', function ( req, res, next ) {
 	  serverDb.getImageContent(req.params._id).then(function(doc){
 	      res.set('Cache-Control', 'max-age=600');
 	      res.set('Content-Type', doc.type);
 	      res.send(doc.data);
 	    }).catch(next);
 	});
-
-
 
 	router.post( "/file-upload", upload.single('file'),
 	  function ( req, res, next ) {
@@ -98,16 +96,13 @@ module.exports = function(passport){
 	  }).catch(next);
 	})
 
-	router.get('/imgfile/:_id', function ( req, res, next ) {
+	router.get('/blob/:_id', function ( req, res, next ) {
 	  serverDb.getImageContent(req.params._id).then(function(doc){
 	      res.set('Cache-Control', 'max-age=600');
 	      res.set('Content-Type', doc.type);
 	      res.send(doc.data);
 	    }).catch(next);
 	});
-
-
-
 
 	return router;
 }

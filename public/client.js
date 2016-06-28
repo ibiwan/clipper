@@ -31,7 +31,7 @@ var events_g = (function(){
 
 var factory_g = (function(events){
   var templates    = {};
-  [ 'tag_row', 'meta_tag_btn', 'cloud_tag_btn', 'clippet', 'content_image' ].forEach(function ( t ) {
+  [ 'tag_row', 'meta_tag_btn', 'cloud_tag_btn', 'clippet', 'content_image', 'content_pdf' ].forEach(function ( t ) {
     Mustache.parse(templates[ t ] = $('#' + t).html());
   });
 
@@ -44,7 +44,17 @@ var factory_g = (function(events){
   }
 
   function contentImage(_id, type, filename){
-    return $(Mustache.render(templates.content_image, { _id:_id, type:type, filename:filename }));
+    var img = $(Mustache.render(templates.content_image, { _id:_id, type:type, filename:filename }));
+    img.data('activate', function(){ img.attr('src', img.data('src')); });
+    img.data('clone', function(){return contentImage(_id, type, filename);});
+    return img;
+  }
+
+  function contentPdf(_id, filename){
+    var pdf = $(Mustache.render(templates.content_pdf, { _id:_id, filename:filename }));
+    pdf.data('activate', function(){ pdf.attr('data', pdf.data('data')); });
+    pdf.data('clone', function(){return contentPdf(_id , filename);});
+    return pdf;
   }
 
   function metaTagButton(tag){
@@ -58,6 +68,7 @@ var factory_g = (function(events){
   return {
     tagRow         : tagRow,
     clippet        : clippet,
+    contentPdf     : contentPdf,
     contentImage   : contentImage,
     metaTagButton  : metaTagButton,
     cloudTagButton : cloudTagButton,
@@ -72,12 +83,13 @@ var preview_g = (function(events){
 
   var previewState = 'off';
 
-  function show( imgUrl, keep ) {
+  function show( showcase, keep ) {
     if ( previewState === 'off' || keep ) {
       previewState = keep ? 'keep' : 'moment';
       $('.thumb').switchClass('col-xs-3 col-md-2', 'col-xs-12');
       $('.metadata').hide();
-      $('#preview-col').show().find('img').attr('src', imgUrl);
+      showcase.data('activate')();
+      $('#preview-col').show().find('#preview').html(showcase);
       $('#clippets-col').switchClass('col-xs-10 col-md-9', 'col-xs-3 col-md-2');
       $('#tag-list-col').hide();
     }
@@ -95,7 +107,7 @@ var preview_g = (function(events){
   }
 
   events.subscribe('/preview/show', function(o){
-    show(o.url, o.keep);
+    show(o.showcase, o.keep);
   });
 
   events.subscribe('/preview/hide', function(o){
@@ -145,23 +157,19 @@ var ui_g = (function(events){
     }
   };
 
-  function urlFromWell(well){
-    return $(well).find('img').attr('src');
-  }
-
-  $(document)   .on('click',      '.delete-tag',     function (e) { deleteTagButtonPressed(e, this);                                      });
-  $(document)   .on('click',      '.delete-clippet', function (e) { deleteClippetButtonPressed(e, this);                                      });
-  $(document)   .on('change',     '.newTag',         function (e) { newTagInputChanged(this);                                             });
-  $(document)   .on('submit',     '.newTagForm',     function (e) { e.preventDefault();                                                   });
-  $(document)   .on('submit',     '#searchForm',     function (e) { e.preventDefault();                                                   });
-  $(document)   .on('click',      '.modeButton',     function (e) { selectModeClicked(this);                                              });
-  $(document)   .on('click',      '.tag',            function (e) { searchTermClicked(this);                                              });
-  $(document)   .on('keyup',      '#searchField',    function (e) { events.publish('/refresh', {clearIfEmpty:false});                     });
-  $(document)   .on('click',      '#searchClear',    function (e) { events.publish('/search/clear');                                      });
-  $('#preview') .on('click',      'img',             function (e) { events.publish('/preview/hide', {force:true});                        });
-  $('#clippets').on('mouseleave', '.well',           function (e) { events.publish('/preview/hide', {force:false});                       });
-  $('#clippets').on('click',      '.well',           function (e) { events.publish('/preview/show', {url:urlFromWell(this), keep:true});  });
-  $('#clippets').on('mouseenter', '.well',           function (e) { events.publish('/preview/show', {url:urlFromWell(this), keep:false}); });
+  $(document)   .on('click',      '.delete-tag',     function (e) { deleteTagButtonPressed(e, this);                                                 });
+  $(document)   .on('click',      '.delete-clippet', function (e) { deleteClippetButtonPressed(e, this);                                             });
+  $(document)   .on('change',     '.newTag',         function (e) { newTagInputChanged(this);                                                        });
+  $(document)   .on('submit',     '.newTagForm',     function (e) { e.preventDefault();                                                              });
+  $(document)   .on('submit',     '#searchForm',     function (e) { e.preventDefault();                                                              });
+  $(document)   .on('click',      '.modeButton',     function (e) { selectModeClicked(this);                                                         });
+  $(document)   .on('click',      '.tag',            function (e) { searchTermClicked(this);                                                         });
+  $(document)   .on('keyup',      '#searchField',    function (e) { events.publish('/refresh', {clearIfEmpty:false});                                });
+  $(document)   .on('click',      '#searchClear',    function (e) { events.publish('/search/clear');                                                 });
+  $('#preview') .on('click',                         function (e) { events.publish('/preview/hide', {force:true});                                   });
+  $('#clippets').on('mouseleave', '.well',           function (e) { events.publish('/preview/hide', {force:false});                                  });
+  $('#clippets').on('click',      '.well',           function (e) { events.publish('/preview/show', {showcase:$(this).data('clone')(), keep:true});  });
+  $('#clippets').on('mouseenter', '.well',           function (e) { events.publish('/preview/show', {showcase:$(this).data('clone')(), keep:false}); });
 
   function updateConfig(fast){
     $.each({
@@ -198,14 +206,16 @@ var clipart_g = (function(factory, events){
       $('#clippets').html('');
     }
     if(clips.filter(function(clip){
+      // use filter to loop over clips so we can...
       return addClip(clip);
     })){
+      // ...refresh if any addClip returned non-null
       events.publish('/refresh', {clearIfEmpty:true});
     }
   }
 
   function getSeen(){
-    return clipSeen;
+    return $.extend({}, clipSeen); //copy so changes don't propagate backwards
   }
 
 
@@ -222,39 +232,45 @@ var clipart_g = (function(factory, events){
     return tagRow;
   }
 
-  function addImageClip( _id, type, filename, md5str, tags ) {
-    var fingerprint = filename + md5str;
-    if ( clipSeen[ fingerprint ] ) {
-      clipSeen[ fingerprint ].clippet.remove();
-    }
-
-    var content = factory.contentImage(_id, type, filename);
-    var clippet = factory.clippet(_id, type, filename);
-
-    clippet.find('.well').append(content);
-
-    clipSeen[ fingerprint ] = {tags:tags, clippet:clippet};
-    clippet.find('.tagRowHolder').append(makeTagRow(tags));
-    clippet.hide();
-
-    $('#clippets').prepend(clippet); // adds to DOM, so now we can place cursor
-    clippet.find('.newTag').focus();
-
-    return clippet;
-  }
-
-  function addClip( item ) {
+  function getClipContent( item ){
     switch ( item.type ) {
       case 'image/jpeg':
       case 'image/png':
-        return addImageClip(item._id, item.type, item.filename, item.md5, item.tags);
-        break;
+        return factory.contentImage(item._id, item.type, item.filename);
+      case 'application/pdf':
+        return factory.contentPdf(item._id, item.filename);
       default:
         console.log("couldn't handle type: " + item.type);
         return false;
         break;
     }
+  }
 
+  function addClip( item ) {
+
+    var fingerprint = item.filename + item.md5str;
+    if ( clipSeen[ fingerprint ] ) {
+      clipSeen[ fingerprint ].clippet.remove();
+    }
+
+    var clippet = factory.clippet(item._id, item.type, item.filename);
+    var content = getClipContent(item);
+
+    var well = clippet.find('.well');
+    clippet.activate = content.data('activate');
+
+    well.append(content);
+    well.data('clone', content.data('clone'));
+
+    clipSeen[ fingerprint ] = {tags:item.tags, clippet:clippet};
+    clippet.find('.tagRowHolder').append(makeTagRow(item.tags));
+    clippet.hide();
+
+    $('#clippets').prepend(clippet); 
+    // ^ adds to DOM, so now we can place cursor v
+    clippet.find('.newTag').focus();
+
+    return clippet;
 
   }
 
@@ -283,8 +299,7 @@ var search_g = (function(clipart, factory, events){
   }
 
   function unHide(clippet){
-    var img = clippet.find('img');
-    img.attr('src', img.data('src'));
+    clippet.activate();
     clippet.show();
   }
 

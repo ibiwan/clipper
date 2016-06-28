@@ -17,7 +17,11 @@ block templates
 			span {{tag}}
 				
 	script#content_image(type='text/mustache')
-		img.img-responsive(data-src='imgfile/{{ _id }}', type='{{ type }}', alt='{{ filename }}')
+		img.img-responsive(data-src='blob/{{ _id }}', type='{{ type }}', alt='{{ filename }}')
+
+	script#content_pdf(type='text/mustache')
+		object(data-data='blob/{{ _id }}', type="application/pdf")
+			| {{ filename }}
 
 	script#clippet(type='text/mustache')
 		.clippet.row(data-_id='{{ _id }}')
