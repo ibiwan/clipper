@@ -77,20 +77,20 @@ module.exports = function(passport){
 
 	  });
 
-	router.get('/delete/:_id', function(req, res, next){
+	router.delete('/:_id', function(req, res, next){
 	  var _id = req.params._id;
 	  serverDb.deleteClippet(_id).then(function(result){
 	    return res.json({success:true});
 	  }).catch(next);
 	});
 
-	router.get('/tag/delete/:_id/:tag', function ( req, res, next ) {
+	router.delete('/tag/:_id/:tag', function ( req, res, next ) {
 	  serverDb.deleteTag(req.params._id, req.params.tag).then(function(doc){
 	    return res.json(doc);
 	  }).catch(next);
 	});
 
-	router.get('/tag/add/:_id/:tag', function(req, res, next){
+	router.post('/tag/:_id/:tag', function(req, res, next){
 	  serverDb.addTag(req.params._id, req.params.tag).then(function(doc){
 	    return res.json(doc);
 	  }).catch(next);

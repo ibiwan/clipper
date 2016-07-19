@@ -8,7 +8,7 @@ block templates
 						input.form-control.newTag(type='text', placeholder='add tag')
 
 	script#meta_tag_btn(type='text/mustache')
-		button.tag.btn.btn-small.btn-default.meta(type='button')
+		button.tag.btn.btn-small.btn-default.meta(type='button', data-tag='{{ tag }}')
 			span {{ tag }} &nbsp;
 			i.delete.delete-tag.glyphicon.glyphicon-remove-sign.color-grey.pull-right
 

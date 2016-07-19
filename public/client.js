@@ -121,7 +121,7 @@ var preview_g = (function(events){
 
 var ui_g = (function(events){
   function deleteTagButtonPressed(e, deleteButton){
-    var tag = $(deleteButton).closest('.tag').find('span').text();
+    var tag = $(deleteButton).closest('.tag').data('tag');
     var _id = $(deleteButton).closest('.clippet').data('_id');
     events.publish('/api/deleteTag', {_id:_id, tag:tag});
     e.stopPropagation();
@@ -398,31 +398,31 @@ var search_g = (function(clipart, factory, events){
 var api_g = (function(events){
 
   function affectTag( _id, tag, verb ) {
-    $.getJSON({ url : 'tag/' + verb + '/' + _id + '/' + tag })
-    .then(function(clip){
+    $.ajax({
+      method   : verb,
+      url      : 'tag/' + _id + '/' + tag ,
+      dataType : 'json'
+    })
+     .then(function(clip){
       events.publish('/clipart/addOne', {clip:clip}); 
     });
   }
 
-  function deleteTag( _id, tag ) {
-    affectTag( _id, tag, 'delete' );
-  }
-
-  function addTag( _id, tag ) {
-    affectTag( _id, tag, 'add' );
-  }
-
   function getList( ) {
     $.getJSON({ url:'clippets' })
-     .then(function(data){
-        events.publish('/clipart/replaceList', {clips:data});
-     });
+    .then(function(data){
+      events.publish('/clipart/replaceList', {clips:data});
+    });
   }
 
   function deleteClippet( _id ) {
-    $.getJSON({ url: 'delete/' + _id })
+    $.ajax({
+      method   : 'delete',
+      url      : '/' + _id,
+      dataType : 'json'
+    })
     .then(function(data){
-        getList();
+      getList();
     });
   }
 
@@ -431,11 +431,11 @@ var api_g = (function(events){
   });
 
   events.subscribe('/api/addTag', function(o){
-    addTag(o._id, o.tag);
+    affectTag(o._id, o.tag, 'post');
   });
 
   events.subscribe('/api/deleteTag', function(o){
-    deleteTag(o._id, o.tag);
+    affectTag(o._id, o.tag, 'delete');
   });
 
   events.subscribe('/api/getList', function(o){
