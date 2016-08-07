@@ -7,7 +7,7 @@ const favicon        = require('static-favicon');
 const logger         = require('morgan');
 const cookieParser   = require('cookie-parser');
 const bodyParser     = require('body-parser');
-const dbConfig       = require('./db');
+const dbConfig       = require('./db-config');
 const mongoose       = require('mongoose');
 const passport       = require('passport');
 const expressSession = require('express-session');
@@ -30,7 +30,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());                          // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({ extended : true })); // to support URL-encoded bodies
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Configuring Passport
 app.use(expressSession({secret: 'mySecretKey'}));

@@ -1,8 +1,10 @@
-var express = require('express');
-var router = express.Router();
-const serverDb = require('../server-db');
-const multer       = require('multer');
+const express  = require('express');
+const router   = express.Router();
+
+const multer   = require('multer');
 const upload   = multer({ dest : 'uploads/tmp/' });
+
+const serverDb = require('../db');
 
 var isAuthenticated = function (req, res, next) {
 	// if user is authenticated in the session, call the next() to call the next request handler 
