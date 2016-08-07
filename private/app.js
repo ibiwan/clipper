@@ -1,14 +1,16 @@
 console.log('app.js');
 
-const Promise      = require('bluebird');
-const express      = require('express');
-const path         = require('path');
-const favicon      = require('static-favicon');
-const logger       = require('morgan');
-const cookieParser = require('cookie-parser');
-const bodyParser   = require('body-parser');
-const dbConfig     = require('./db');
-const mongoose     = require('mongoose');
+const Promise        = require('bluebird');
+const express        = require('express');
+const path           = require('path');
+const favicon        = require('static-favicon');
+const logger         = require('morgan');
+const cookieParser   = require('cookie-parser');
+const bodyParser     = require('body-parser');
+const dbConfig       = require('./db');
+const mongoose       = require('mongoose');
+const passport       = require('passport');
+const expressSession = require('express-session');
 
 mongoose.connect(dbConfig.url);
 
@@ -31,9 +33,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configuring Passport
-var passport = require('passport');
-var expressSession = require('express-session');
-// TODO - Why Do we need this key ?
 app.use(expressSession({secret: 'mySecretKey'}));
 app.use(passport.initialize());
 app.use(passport.session());
