@@ -6,7 +6,7 @@ const fs       = require('fs');
 
 const dbConfig = require('./db-config');
 
-var pDb    = mongodb.MongoClient.connect(dbConfig.url, { promiseLibrary : Promise });
+const pDb      = mongodb.MongoClient.connect(dbConfig.url, { promiseLibrary : Promise });
 
 pCollStuff = pDb.then(function ( db ) {
   return db.collection('stuff');

@@ -1,4 +1,4 @@
-var events_g = (function(){
+const events_g = (function(){
   var topics = {};
   var hOP = topics.hasOwnProperty;
 
@@ -29,7 +29,7 @@ var events_g = (function(){
   };
 })();
 
-var factory_g = (function(events){
+const factory_g = (function(events){
   var templates    = {};
   [ 'tag_row', 'meta_tag_btn', 'cloud_tag_btn', 'clippet', 'content_image', 'content_pdf' ].forEach(function ( t ) {
     Mustache.parse(templates[ t ] = $('#' + t).html());
@@ -76,7 +76,7 @@ var factory_g = (function(events){
   };
 })(events_g);
 
-var preview_g = (function(events){
+const preview_g = (function(events){
   $.prototype.switchClass = function(remove, add){
     return $(this).removeClass(remove).addClass(add);
   };
@@ -119,7 +119,7 @@ var preview_g = (function(events){
   };
 })(events_g);
 
-var ui_g = (function(events){
+const ui_g = (function(events){
   function deleteTagButtonPressed(e, deleteButton){
     var tag = $(deleteButton).closest('.tag').data('tag');
     var _id = $(deleteButton).closest('.clippet').data('_id');
@@ -197,7 +197,7 @@ var ui_g = (function(events){
   };
 })(events_g);
 
-var clipart_g = (function(factory, events){
+const clipart_g = (function(factory, events){
   var clipSeen     = {};
 
   function show(clips, freshStart){
@@ -288,7 +288,7 @@ var clipart_g = (function(factory, events){
   };
 })(factory_g, events_g);
 
-var search_g = (function(clipart, factory, events){
+const search_g = (function(clipart, factory, events){
   String.prototype.saneSplit = function(delim) {
     return (this.length === 0) ? [] : this.split(delim);
   };
@@ -395,7 +395,7 @@ var search_g = (function(clipart, factory, events){
   };
 })(clipart_g, factory_g, events_g);
 
-var api_g = (function(events){
+const api_g = (function(events){
 
   function affectTag( _id, tag, verb ) {
     $.ajax({

@@ -1,5 +1,3 @@
-console.log('app.js');
-
 const Promise        = require('bluebird');
 const express        = require('express');
 const path           = require('path');
@@ -14,7 +12,7 @@ const expressSession = require('express-session');
 
 mongoose.connect(dbConfig.url);
 
-var app = express();
+const app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -39,19 +37,19 @@ app.use(passport.session());
 
  // Using the flash middleware provided by connect-flash to store messages in session
  // and displaying in templates
-var flash = require('connect-flash');
+const flash = require('connect-flash');
 app.use(flash());
 
 // Initialize Passport
-var initPassport = require('./passport/init');
+const initPassport = require('./passport/init');
 initPassport(passport);
 
-var routes = require('./routes/index')(passport);
+const routes = require('./routes/index')(passport);
 app.use('/', routes);
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
-    var err = new Error('Not Found');
+    const err = new Error('Not Found');
     err.status = 404;
     next(err);
 });
