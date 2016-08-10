@@ -37,8 +37,4 @@ block templates
 	include ./clippet-templates.jade
 
 block includes
-	script(src='https://code.jquery.com/jquery-2.2.1.min.js')
-	script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js')
-	script(src='https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js')
-	script(src='https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js')
-	script(src='client.js')
+	script(src='scripts/require.js' data-main='scripts/app')
