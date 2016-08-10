@@ -1,4 +1,4 @@
-define(['mod/clipart', 'mod/factory', 'mod/events'], function(clipart, factory, events){
+define(['jquery', 'mod/clipart', 'mod/factory', 'mod/events'], function($, clipart, factory, events){
   String.prototype.saneSplit = function(delim) {
     return (this.length === 0) ? [] : this.split(delim);
   };
@@ -49,12 +49,18 @@ define(['mod/clipart', 'mod/factory', 'mod/events'], function(clipart, factory, 
   }
 
   function addTerm(tag){
+    tag = $.trim(tag);
     var field = $('#searchField');
-    field.val(tag + ' ' + field.val());
+    var newSearch = tag + ' ' + field.val();
+    field.val(newSearch);
+
     field.focus();
     var cleared = update(true);
+
     if(cleared){
-      field.val(tag + ' ' + field.val());
+      var newSearch = tag + ' ' + field.val();
+
+      field.val(newSearch);
       field.focus();
       var cleared = update(false);
     }
