@@ -1,4 +1,4 @@
-define(['mod/events'], function(events){
+define(['jquery', 'mod/events'], function($, events){
   $.prototype.switchClass = function(remove, add){
     return $(this).removeClass(remove).addClass(add);
   };

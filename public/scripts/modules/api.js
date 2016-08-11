@@ -48,4 +48,5 @@ define(['mod/events'], function(events){
   return {
     true:true
   };
+  
 });

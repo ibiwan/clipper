@@ -6,6 +6,12 @@ block styles
 
 block content
 	header.container
+		h5.row.pull-right 
+			if user
+				| #{user.username} 
+				a(href='/signout') (x)
+			else
+				a(href='/login') login
 		h1.row.text-center A clippet manager
 		div#controlForm.row
 			ul.nav.nav-pills.centered
