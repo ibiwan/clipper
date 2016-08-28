@@ -1,4 +1,4 @@
-define(['mod/events', 'mustache'], function(events, Mustache){
+define(['jquery', 'mod/events', 'mustache'], function($, events, Mustache){
   var templates    = {};
   [ 'tag_row', 'meta_tag_btn', 'cloud_tag_btn', 'clippet', 'content_image', 'content_pdf' ].forEach(function ( t ) {
     Mustache.parse(templates[ t ] = $('#' + t).html());

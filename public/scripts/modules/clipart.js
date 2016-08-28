@@ -1,4 +1,4 @@
-define(['mod/factory', 'mod/events'], function(factory, events){
+define(['jquery', 'mod/factory', 'mod/events'], function($, factory, events){
   var clipSeen     = {};
 
   function show(clips, freshStart){

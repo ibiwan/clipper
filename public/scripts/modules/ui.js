@@ -1,4 +1,4 @@
-define(['mod/events', 'dropzone'], function(events, Dropzone){
+define(['jquery', 'mod/events', 'dropzone'], function($, events, Dropzone){
   function deleteTagButtonPressed(e, deleteButton){
     var tag = $(deleteButton).closest('.tag').data('tag');
     var _id = $(deleteButton).closest('.clippet').data('_id');
@@ -28,13 +28,16 @@ define(['mod/events', 'dropzone'], function(events, Dropzone){
     events.publish('/search/addTerm', {term:$(tagBtn).find('span').text()} );
   }
 
-  Dropzone.options.drop = {
-    init : function () {
-      this.on("success", function(){
-        events.publish('/api/getList');
-      });
-    }
-  };
+  $(function(){
+    Dropzone.options.drop = {
+      init : function () {
+        this.on("success", function(){
+          events.publish('/api/getList');
+        }); 
+      }
+    };    
+    var myDropzone = new Dropzone("#drop");
+  });
 
   $(document)   .on('click',      '.delete-tag',     function (e) { deleteTagButtonPressed(e, this);                                                 });
   $(document)   .on('click',      '.delete-clippet', function (e) { deleteClippetButtonPressed(e, this);                                             });
