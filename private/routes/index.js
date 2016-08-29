@@ -75,7 +75,7 @@ module.exports = function(passport){
 	router.post( "/file-upload", upload.single('file'),
 	  function ( req, res, next ) {
 	    serverDb
-	      .uploadFile(req.file.originalname, req.file.destination + req.file.filename, req.file.mimetype)
+	      .uploadFile(req.file.originalname, req.file.destination + req.file.filename, req.file.mimetype, req.user)
 	      .then(function(idHash){
 	        res.send(idHash);
 	      })

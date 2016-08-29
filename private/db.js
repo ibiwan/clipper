@@ -1,122 +1,179 @@
-const Promise  = require('bluebird');
-const mongodb  = require('mongodb');
-const util     = require('util');
-const md5      = require('md5');
-const fs       = require('fs');
+/*property
+  readFileSync, MongoClient, connect, url, promiseLibrary, then, collection, toLowerCase, find, data, sort, lastUpdated, _id, toArray,
+  md5, type, filename, tags, now, insert, ops, id, hash, catch, codee, finally, unlink, code, ObjectId, buffer, $set, getClippets, deleteClippet,
+  exports, deleteOne, addTag, deleteTag, uploadFile, split, $pullAll
+  */
+const Promise = require('bluebird');
+const mongodb = require('mongodb');
+// const util     = require('util');
+const md5 = require('md5');
+const fs = require('fs');
 
 const dbConfig = require('./db-config');
 
-const pDb      = mongodb.MongoClient.connect(dbConfig.url, { promiseLibrary : Promise });
-
-pCollStuff = pDb.then(function ( db ) {
-  return db.collection('stuff');
+const pDb = mongodb.MongoClient.connect(dbConfig.url, {
+    promiseLibrary: Promise
 });
 
-function formatTag(str){
-  return str.toLowerCase();//.replace(/ /g, '-');
+var pCollStuff = pDb.then(function(db) {
+    "use strict";
+    return db.collection('stuff');
+});
+
+function formatTag(str) {
+    "use strict";
+    return str.toLowerCase(); //.replace(/ /g, '-');
 }
 
-function find(coll, query, excludeContent){
-  return coll.find(query, excludeContent ? {data:0} : {}).sort({ lastUpdated:-1, _id:-1 }).toArray();
+function getList(coll, query) {
+    "use strict";
+    return coll.find(query, {data: 0})
+        .sort({
+            lastUpdated: -1,
+            _id: -1
+        })
+        .toArray();
 }
 
-function getClippets(){
-  return pCollStuff.then(function(collStuff){
-    return find(collStuff, {}, true)
-  });
+function getClippets() {
+    "use strict";
+    return pCollStuff.then(function(collStuff) {
+        return getList(collStuff, {});
+    });
 }
 
-function uploadFile(originalName, localName, type){
-  return pCollStuff.then(function ( collStuff ) {
-    var content  = fs.readFileSync(localName);
-    var hash     = md5(content);
+function uploadFile(originalName, localName, type, user) {
+    "use strict";
 
-    var newDoc      = {
-      'data'       : content,
-      'md5'        : hash,
-      'type'       : type,
-      'filename'   : originalName,
-      'tags'       : [ formatTag(originalName) ],
-      'lastUpdated': Date.now()
+    return pCollStuff.then(function(collStuff) {
+        var content = fs.readFileSync(localName);
+        var hash    = md5(content);
+        var newDoc  = {
+            data        : content,
+            md5         : hash,
+            type        : type,
+            filename    : originalName,
+            tags        : [formatTag(originalName)],
+            lastUpdated : Date.now()
+        };
+        if(user){
+            newDoc.owner = user.username;
+        }
+        return collStuff
+            .insert(newDoc)
+            .then(function(resp) {
+                var id = resp.ops[0]._id;
+                return {
+                    id: id,
+                    hash: hash
+                };
+            })
+            .catch(function(err) {
+                if (err.code === 11000) {
+                    return getList(collStuff, {
+                            md5: hash,
+                            filename: originalName
+                        })
+                        .then(function(matched) {
+                            return {
+                                id: matched[0]._id,
+                                hash: hash
+                            };
+                        });
+                }
+                throw err;
+            })
+            .finally(function() {
+                fs.unlink(localName);
+            });
+    });
+}
+
+function getImageContent(_id) {
+    "use strict";
+
+    var idObj = mongodb.ObjectId(_id);
+    return pCollStuff
+        .then(function(collStuff) {
+            return collStuff.find({_id: idObj}).toArray();
+        })
+        .then(function(arr) {
+            return {
+                data: arr[0].data.buffer,
+                type: arr[0].type
+            };
+        });
+}
+
+function editTag(_id, updateDoc, user) {
+    "use strict";
+
+    var queryDoc = {
+        _id: mongodb.ObjectId(_id)
+    };
+    if(user){
+
+    }else{
+        
+    }
+    updateDoc.$set = {
+        lastUpdated: Date.now()
     };
 
-    return collStuff
-      .insert(newDoc)
-      .then(function ( resp ) {
-        var id = resp.ops[ 0 ]._id;
-        return { id : id, hash : hash };
-      })
-      .catch(function ( err ) {
-        if ( err.code === 11000 ) {
-          return find(collStuff, { md5 : hash, filename : originalName })
-            .then(function ( matched ) {
-              return { id : matched[0]._id, hash : hash };
+    return pCollStuff.then(function(collStuff) {
+        return collStuff
+            .updateMany(queryDoc, updateDoc)
+            .then(function() {
+                return getList(collStuff, queryDoc);
+            })
+            .then(function(arr) {
+                return arr[0];
             });
+    });
+}
+
+function addTag(_id, tag, user) {
+    "use strict";
+
+    var updateDoc = {
+        $set: {
+            lastUpdated: Date.now()
+        },
+        $addToSet: {
+            tags: {
+                $each: tag.toLowerCase().split(' ')
+            }
         }
-        throw err;
-      })
-      .finally(function () {
-       fs.unlink(localName);
+    };
+    return editTag(_id, updateDoc);
+}
+
+function deleteTag(_id, tag, user) {
+    "use strict";
+
+    var updateDoc = {
+        $set: {lastUpdated: Date.now()},
+        $pullAll: {
+            tags: [tag]
+        }
+    };
+    return editTag(_id, updateDoc);
+}
+
+function deleteClippet(_id, user) {
+    "use strict";
+
+    return pCollStuff.then(function(collStuff) {
+        var queryDoc = {_id: mongodb.ObjectId(_id)};
+        return collStuff.deleteOne(queryDoc);
     });
-  });
-}
-
-function getImageContent(_id){
-  var idObj = mongodb.ObjectId(_id);
-  return pCollStuff
-    .then(function(collStuff){
-      return find(collStuff, {_id:idObj});
-    })
-    .then(function(arr){
-      return {
-        data: arr[0].data.buffer,
-        type: arr[0].type
-      };
-    });
-}
-
-function editTag(_id, updateDoc){ 
-  var queryDoc  = { _id : mongodb.ObjectId(_id) };
-  return pCollStuff.then(function(collStuff){
-    return collStuff
-      .updateMany(queryDoc, updateDoc)
-      .then(function(){
-        return find(collStuff, queryDoc, true);
-      })
-      .then(function(arr){
-        return arr[0];
-      });
-  });
-}
-
-function addTag(_id, tag){
-  var updateDoc = {
-    '$set'      : { lastUpdated: Date.now() },
-    '$addToSet' : { tags : { $each: tag.toLowerCase().split(' ') } }
-  };
-  return editTag(_id, updateDoc);
-}
-
-function deleteTag(_id, tag){
-  var updateDoc = {
-    '$set'     : { lastUpdated: Date.now() },
-    '$pullAll' : { tags : [tag] }
-  };
-  return editTag(_id, updateDoc);
-}
-
-function deleteClippet(_id){
-  return pCollStuff.then(function(collStuff){
-    var queryDoc = { _id : mongodb.ObjectId(_id) };
-    return collStuff.deleteOne(queryDoc);
-  });
 }
 
 module.exports = {
-  addTag          : addTag,
-  deleteTag       : deleteTag,
-  uploadFile      : uploadFile,
-  getClippets     : getClippets,
-  deleteClippet   : deleteClippet,
-  getImageContent : getImageContent,
+    addTag: addTag,
+    deleteTag: deleteTag,
+    uploadFile: uploadFile,
+    getClippets: getClippets,
+    deleteClippet: deleteClippet,
+    getImageContent: getImageContent
 };
