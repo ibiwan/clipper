@@ -20,25 +20,49 @@ var pCollStuff = pDb.then(function(db) {
     return db.collection('stuff');
 });
 
+function accessFilter(user, moreFilter){
+    "use strict";
+
+    var ret;
+    if(user){
+        ret = {$and: [
+            moreFilter,
+            {$or:[
+                {owner: {$exists: false}},
+                {owner: user.username}
+            ]}
+        ]};
+    } else  {
+        ret = {$and: [
+            moreFilter,
+            {owner: {$exists: false}}
+        ]};
+    }
+
+    return ret;
+}
+
 function formatTag(str) {
     "use strict";
     return str.toLowerCase(); //.replace(/ /g, '-');
 }
 
-function getList(coll, query) {
+function getList(coll, query, user) {
     "use strict";
-    return coll.find(query, {data: 0})
+
+    var ret = coll.find(accessFilter(user, query), {data: 0})
         .sort({
             lastUpdated: -1,
             _id: -1
         })
         .toArray();
+    return ret;
 }
 
-function getClippets() {
+function getClippets(user) {
     "use strict";
     return pCollStuff.then(function(collStuff) {
-        return getList(collStuff, {});
+        return getList(collStuff, {}, user);
     });
 }
 
@@ -89,13 +113,14 @@ function uploadFile(originalName, localName, type, user) {
     });
 }
 
-function getImageContent(_id) {
+function getImageContent(_id, user) {
     "use strict";
 
     var idObj = mongodb.ObjectId(_id);
     return pCollStuff
         .then(function(collStuff) {
-            return collStuff.find({_id: idObj}).toArray();
+            var filter = accessFilter(user, {_id: idObj});
+            return collStuff.find(filter).toArray();
         })
         .then(function(arr) {
             return {
@@ -108,14 +133,9 @@ function getImageContent(_id) {
 function editTag(_id, updateDoc, user) {
     "use strict";
 
-    var queryDoc = {
+    var queryDoc = accessFilter(user, {
         _id: mongodb.ObjectId(_id)
-    };
-    if(user){
-
-    }else{
-        
-    }
+    });
     updateDoc.$set = {
         lastUpdated: Date.now()
     };
@@ -164,7 +184,7 @@ function deleteClippet(_id, user) {
     "use strict";
 
     return pCollStuff.then(function(collStuff) {
-        var queryDoc = {_id: mongodb.ObjectId(_id)};
+        var queryDoc = accessFilter(user, {_id: mongodb.ObjectId(_id)});
         return collStuff.deleteOne(queryDoc);
     });
 }

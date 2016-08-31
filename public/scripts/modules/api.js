@@ -6,7 +6,7 @@ define(['jquery', 'mod/events'], function ($, events) {
     function affectTag(_id, tag, verb) {
         $.ajax({
             method   : verb,
-            url      : 'tag/' + _id + '/' + tag ,
+            url      : 'tag/' + _id + '/' + encodeURIComponent(tag) ,
             dataType : 'json'
         })
         .then(function (clip) {
